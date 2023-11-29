@@ -1,0 +1,19 @@
+[package]
+name = "runner"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+scheduler = { path = "../scheduler" }
+processor = { path = "../processor" }
+
+[dev-dependencies]
+pretty_assertions = "1.3.0"
+function_name = "0.3.0"
+
+[features]
+round-robin = []
+priority-queue = []
+cfs = []

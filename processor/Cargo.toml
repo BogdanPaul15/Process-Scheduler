@@ -1,0 +1,10 @@
+[package]
+name = "processor"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+output = []
+
+[dependencies]
+scheduler = { path = "../scheduler" }
