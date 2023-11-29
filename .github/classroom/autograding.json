@@ -1,0 +1,724 @@
+{
+  "tests": [
+    {
+      "name": "Build",
+      "setup": "",
+      "run": "cargo build",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": null
+    },
+    {
+      "name": "Linter",
+      "setup": "",
+      "run": "cargo clippy",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 10
+    },
+    {
+      "name": "Download Tests",
+      "setup": "git clone https://github.com/UPB-FILS-SdE2/devoir-3-tests.git",
+      "run": "cd devoir-3-tests && make install",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": null
+    },
+    {
+      "name": "Round Robin Simple Single Process",
+      "setup": "",
+      "run": "TEST=simple::single_process make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Simple Fork 2",
+      "setup": "",
+      "run": "TEST=simple::fork_2 make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Simple Fork 3",
+      "setup": "",
+      "run": "TEST=simple::fork_3 make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Simple Sleep",
+      "setup": "",
+      "run": "TEST=simple::sleep make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Simple Work Sleep",
+      "setup": "",
+      "run": "TEST=simple::work_sleep make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Simple Fork Wait Signal",
+      "setup": "",
+      "run": "TEST=simple::fork_wait_signal make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Simple Fork Wait Sleep Signal",
+      "setup": "",
+      "run": "TEST=simple::fork_wait_sleep_signal make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Panic Exec",
+      "setup": "",
+      "run": "TEST=panic::exec make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Panic Sleep",
+      "setup": "",
+      "run": "TEST=panic::sleep make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Panic Wait",
+      "setup": "",
+      "run": "TEST=panic::wait make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Deadlock Wait",
+      "setup": "",
+      "run": "TEST=deadlock::wait make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Deadlock Signal Before Wait",
+      "setup": "",
+      "run": "TEST=deadlock::signal_before_wait make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Deadlock Wait 2",
+      "setup": "",
+      "run": "TEST=deadlock::wait_2 make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Deadlock Signal Before Wait 2",
+      "setup": "",
+      "run": "TEST=deadlock::signal_before_wait_2 make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Deadlock Wait 3",
+      "setup": "",
+      "run": "TEST=deadlock::wait_3 make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Wait And Signal Send Receive",
+      "setup": "",
+      "run": "TEST=wait_and_signal::send_receive make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Wait And Signal Workers",
+      "setup": "",
+      "run": "TEST=wait_and_signal::workers make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Wait And Signal Senders",
+      "setup": "",
+      "run": "TEST=wait_and_signal::senders make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Workers Single Worker",
+      "setup": "",
+      "run": "TEST=workers::single_worker make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Workers Wroker IO",
+      "setup": "",
+      "run": "TEST=workers::worker_io make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Workers Worker 3",
+      "setup": "",
+      "run": "TEST=workers::worker_3 make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Workers Worker Spawning",
+      "setup": "",
+      "run": "TEST=workers::worker_spawning make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Round Robin Workers Sleeper",
+      "setup": "",
+      "run": "TEST=workers::sleeper make round-robin",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 2
+    },
+    {
+      "name": "Priority Queue Simple Single Process",
+      "setup": "",
+      "run": "TEST=simple::single_process make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Simple Fork 2",
+      "setup": "",
+      "run": "TEST=simple::fork_2 make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Simple Fork 3",
+      "setup": "",
+      "run": "TEST=simple::fork_3 make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Simple Sleep",
+      "setup": "",
+      "run": "TEST=simple::sleep make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Simple Work Sleep",
+      "setup": "",
+      "run": "TEST=simple::work_sleep make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Simple Fork Wait Signal",
+      "setup": "",
+      "run": "TEST=simple::fork_wait_signal make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Simple Fork Wait Sleep Signal",
+      "setup": "",
+      "run": "TEST=simple::fork_wait_sleep_signal make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Panic Exec",
+      "setup": "",
+      "run": "TEST=panic::exec make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Panic Sleep",
+      "setup": "",
+      "run": "TEST=panic::sleep make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Panic Wait",
+      "setup": "",
+      "run": "TEST=panic::wait make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Deadlock Wait",
+      "setup": "",
+      "run": "TEST=deadlock::wait make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Deadlock Signal Before Wait",
+      "setup": "",
+      "run": "TEST=deadlock::signal_before_wait make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Deadlock Wait 2",
+      "setup": "",
+      "run": "TEST=deadlock::wait_2 make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Deadlock Signal Before Wait 2",
+      "setup": "",
+      "run": "TEST=deadlock::signal_before_wait make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Deadlock Wait 3",
+      "setup": "",
+      "run": "TEST=deadlock::wait_3 make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Wait And Signal Send Receive",
+      "setup": "",
+      "run": "TEST=wait_and_signal::send_receive make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Wait And Signal Workers",
+      "setup": "",
+      "run": "TEST=wait_and_signal::workers make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Wait And Signal Senders",
+      "setup": "",
+      "run": "TEST=wait_and_signal::senders make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Workers Single Worker",
+      "setup": "",
+      "run": "TEST=workers::single_worker make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Workers Worker IO",
+      "setup": "",
+      "run": "TEST=workers::worker_io make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Workers Worker 3",
+      "setup": "",
+      "run": "TEST=workers::worker_3 make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Workers Worker Spawning",
+      "setup": "",
+      "run": "TEST=workers::worker_spawning make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "Priority Queue Workers Sleeper",
+      "setup": "",
+      "run": "TEST=workers::sleeper make priority-queue",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Simple Single Process",
+      "setup": "",
+      "run": "TEST=simple::single_process make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Simple Fork 2",
+      "setup": "",
+      "run": "TEST=simple::fork_2 make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Simple Fork 3",
+      "setup": "",
+      "run": "TEST=simple::fork_3 make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Simple Sleep",
+      "setup": "",
+      "run": "TEST=simple::sleep make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Simple Work Sleep",
+      "setup": "",
+      "run": "TEST=simple::work_sleep make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Simple Fork Wait Signal",
+      "setup": "",
+      "run": "TEST=simple::fork_wait_signal make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Simple Single Fork Wait Sleep Signal",
+      "setup": "",
+      "run": "TEST=simple::fork_wait_sleep_signal make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Panic Exec",
+      "setup": "",
+      "run": "TEST=panic::exec make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Panic Sleep",
+      "setup": "",
+      "run": "TEST=panic::sleep make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Panic Wait",
+      "setup": "",
+      "run": "TEST=panic::wait make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Deadlock Wait",
+      "setup": "",
+      "run": "TEST=deadlock::wait make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Deadlock Signal Before Wait",
+      "setup": "",
+      "run": "TEST=deadlock::signal_before_wait make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Deadlock Wait 2",
+      "setup": "",
+      "run": "TEST=deadlock::wait_2 make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Deadlock Signal Before Wait 2",
+      "setup": "",
+      "run": "TEST=deadlock::signal_before_wait_2 make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Deadlock Wait 3",
+      "setup": "",
+      "run": "TEST=deadlock::wait_3 make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Wait And Signal Send Receive",
+      "setup": "",
+      "run": "TEST=wait_and_signal::send_receive make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Wait And Signal Workers",
+      "setup": "",
+      "run": "TEST=wait_and_signal::workers make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Wait And Signal Senders",
+      "setup": "",
+      "run": "TEST=wait_and_signal::senders make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Workers Single Worker",
+      "setup": "",
+      "run": "TEST=workers::single_worker make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Workers Worker IO",
+      "setup": "",
+      "run": "TEST=workers::worker_io make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Workers Worker 3",
+      "setup": "",
+      "run": "TEST=workers::worker_3 make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Workers Worker Spawning",
+      "setup": "",
+      "run": "TEST=workers::worker_spawning make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    },
+    {
+      "name": "CFS Workers Sleeper",
+      "setup": "",
+      "run": "TEST=workers::sleeper make cfs",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": 1
+    }
+  ]
+}
