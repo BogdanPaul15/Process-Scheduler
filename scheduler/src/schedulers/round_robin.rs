@@ -77,7 +77,7 @@ impl Scheduler for RoundRobin {
         match self.running_process.take() {
             Some(mut running_process) => {
                 // If a running process exists
-                if self.remaining_running_time <= self.minimum_remaining_timeslice {
+                if self.remaining_running_time < self.minimum_remaining_timeslice {
                     // Mark the current running process as Ready and push it to the ready queue
                     running_process.state = ProcessState::Ready;
                     self.ready.push(running_process);
