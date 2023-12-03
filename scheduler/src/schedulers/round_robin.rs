@@ -55,7 +55,7 @@ impl Process for ProcessInfo {
         self.priority
     }
     fn extra(&self) -> String {
-        todo!()
+        String::new()
     }
 }
 
