@@ -70,26 +70,31 @@ impl Scheduler for RoundRobin {
                     running_process.state = ProcessState::Ready;
                     self.ready.push(running_process);
                     // Get the next process in the ready queue and mark it as running
-                    let mut first_ready_process = self.ready.remove(0);
-                    first_ready_process.state = ProcessState::Running;
-                    self.running_process = Some(first_ready_process);
+                    if !self.ready.is_empty() {
+                        let mut proc = self.ready.remove(0);
+                        proc.state = ProcessState::Running;
+                        self.running_process = Some(proc);
+                        return crate::SchedulingDecision::Run {
+                            pid: self.running_process.as_ref().unwrap().pid,
+                            timeslice: self.timeslice,
+                        };
+                    } else {
+                        return crate::SchedulingDecision::Done;
+                    }
+                } else {
                     return crate::SchedulingDecision::Run {
-                        pid: self.running_process.expect("No running process").pid(),
+                        pid: self.running_process.as_ref().unwrap().pid(),
                         timeslice: self.timeslice,
                     };
                 }
-                return crate::SchedulingDecision::Run {
-                    pid: self.running_process.expect("No running process").pid(),
-                    timeslice: self.timeslice,
-                };
             }
             None => {
-                if let Some(mut first_ready_process) = self.ready.get_mut(0) {
-                    first_ready_process.state = ProcessState::Running;
-                    self.running_process = Some(first_ready_process);
-                    self.ready.remove(0);
+                if !self.ready.is_empty() {
+                    let mut proc = self.ready.remove(0);
+                    proc.state = ProcessState::Running;
+                    self.running_process = Some(proc);
                     return crate::SchedulingDecision::Run {
-                        pid: first_ready_process.pid(),
+                        pid: self.running_process.as_ref().unwrap().pid(),
                         timeslice: self.timeslice,
                     };
                 } else {
