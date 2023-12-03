@@ -63,9 +63,6 @@ impl Process for ProcessInfo {
 
 impl Scheduler for RoundRobin {
     fn next(&mut self) -> crate::SchedulingDecision {
-        if self.init {
-            return crate::SchedulingDecision::Panic;
-        }
         // Check if there is a running process
         match self.running_process.take() {
             Some(mut running_process) => {
@@ -96,6 +93,9 @@ impl Scheduler for RoundRobin {
             None => {
                 // There is no running process (primul fork, exit, toate wait sau sleep)
                 if !self.ready.is_empty() {
+                    if self.init {
+                        return crate::SchedulingDecision::Panic;
+                    }
                     let mut proc = self.ready.remove(0);
                     proc.state = ProcessState::Running;
                     self.running_process = Some(proc);
@@ -115,6 +115,8 @@ impl Scheduler for RoundRobin {
                         }
                         if is_deadlock {
                             return crate::SchedulingDecision::Deadlock;
+                        } else {
+                            // sleep for minimum time
                         }
                         return crate::SchedulingDecision::Done;
                     }
@@ -156,6 +158,7 @@ impl Scheduler for RoundRobin {
                     // self.running_process = None;
                     // // update all processes
                     // SyscallResult::Success
+                    // fa update la timings si syscall
                     if let Some(running_process) = self.running_process.take() {
                         if running_process.pid == 1 {
                             self.init = true;
