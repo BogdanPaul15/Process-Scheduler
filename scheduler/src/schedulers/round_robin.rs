@@ -62,7 +62,42 @@ impl Process for ProcessInfo {
 impl Scheduler for RoundRobin {
     fn next(&mut self) -> crate::SchedulingDecision {
         // Check if there is a running process
-        todo!()
+        match self.running_process.take() {
+            Some(mut running_process) => {
+                // If a running process exists
+                if self.remaining_running_time <= self.minimum_remaining_timeslice {
+                    // Mark the current running process as Ready and push it to the ready queue
+                    running_process.state = ProcessState::Ready;
+                    self.ready.push(running_process);
+                    // Get the next process in the ready queue and mark it as running
+                    let mut first_ready_process = self.ready.remove(0);
+                    first_ready_process.state = ProcessState::Running;
+                    self.running_process = Some(first_ready_process);
+                    return crate::SchedulingDecision::Run {
+                        pid: self.running_process.expect("No running process").pid(),
+                        timeslice: self.timeslice,
+                    };
+                }
+                return crate::SchedulingDecision::Run {
+                    pid: self.running_process.expect("No running process").pid(),
+                    timeslice: self.timeslice,
+                };
+            }
+            None => {
+                if let Some(mut first_ready_process) = self.ready.get_mut(0) {
+                    first_ready_process.state = ProcessState::Running;
+                    self.running_process = Some(first_ready_process);
+                    self.ready.remove(0);
+                    return crate::SchedulingDecision::Run {
+                        pid: first_ready_process.pid(),
+                        timeslice: self.timeslice,
+                    };
+                } else {
+                    // Handle the case when there's no process available to run
+                    return crate::SchedulingDecision::Done;
+                }
+            }
+        }
     }
 
     fn stop(&mut self, _reason: crate::StopReason) -> crate::SyscallResult {
