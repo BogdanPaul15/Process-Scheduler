@@ -116,9 +116,11 @@ impl Scheduler for RoundRobin {
                         // verifica deadlock
                         let mut is_deadlock = true;
                         for proc in &self.wait {
-                            if let ProcessState::Waiting { event: None } = &proc.state {
-                                is_deadlock = false;
-                                break;
+                            if let ProcessState::Waiting { event } = &proc.state {
+                                if *event == None {
+                                    is_deadlock = false;
+                                    break;
+                                }
                             }
                         }
                         if is_deadlock {
@@ -161,8 +163,61 @@ impl Scheduler for RoundRobin {
                     SyscallResult::Pid(new_pid)
                 }
                 Syscall::Sleep(_amount) => SyscallResult::Success,
-                Syscall::Wait(_event) => SyscallResult::Success,
-                Syscall::Signal(_event) => SyscallResult::Success,
+                Syscall::Wait(e) => {
+                    // increase all timings
+                    if let Some(mut running_process) = self.running_process.take() {
+                        running_process.state = ProcessState::Waiting { event: (Some(e)) };
+                        running_process.timings.0 += usize::from(self.timeslice) - remaining;
+                        running_process.timings.1 += 1;
+                        running_process.timings.2 += usize::from(self.timeslice) - remaining;
+                        self.increase_timings(usize::from(self.timeslice) - remaining);
+                        self.wait.push(running_process);
+                    }
+                    self.running_process = None;
+                    SyscallResult::Success
+                }
+                Syscall::Signal(e) => {
+                    // for proc in &mut self.wait {
+                    //     if let ProcessState::Waiting { event } = &proc.state {
+                    //         if *event == Some(e) {
+                    //             proc.state = ProcessState::Ready;
+                    //             let new_proc = ProcessInfo {
+                    //                 pid: proc.pid,
+                    //                 state: ProcessState::Ready,
+                    //                 timings: proc.timings,
+                    //                 priority: proc.priority,
+                    //                 extra: proc.extra.clone(),
+                    //             };
+                    //             self.ready.push(new_proc);
+                    //             self.wait.remove(new_proc);
+                    //         }
+                    //     }
+                    // }
+                    self.wait.retain(|proc| {
+                        if let ProcessState::Waiting { event } = &proc.state {
+                            if *event == Some(e) {
+                                let new_proc = ProcessInfo {
+                                    pid: proc.pid,
+                                    state: ProcessState::Ready,
+                                    timings: proc.timings,
+                                    priority: proc.priority,
+                                    extra: proc.extra.clone(),
+                                };
+                                self.ready.push(new_proc);
+                                return false;
+                            }
+                        }
+                        true
+                    });
+                    if let Some(mut running_process) = self.running_process.take() {
+                        running_process.state = ProcessState::Waiting { event: (Some(e)) };
+                        running_process.timings.0 += usize::from(self.timeslice) - remaining;
+                        running_process.timings.1 += 1;
+                        running_process.timings.2 += usize::from(self.timeslice) - remaining;
+                        self.increase_timings(usize::from(self.timeslice) - remaining);
+                    }
+                    SyscallResult::Success
+                }
                 Syscall::Exit => {
                     // fa update la timings si syscall
                     if let Some(running_process) = self.running_process.take() {
