@@ -20,6 +20,7 @@ pub struct RoundRobin {
     running_process: Option<ProcessInfo>,
     remaining_running_time: usize,
     init: bool,
+    sleep_amounts: Vec<usize>,
 }
 impl RoundRobin {
     pub fn new(timeslice: NonZeroUsize, minimum_remaining_timeslice: usize) -> Self {
@@ -33,6 +34,7 @@ impl RoundRobin {
             running_process: None,
             remaining_running_time: 0,
             init: false,
+            sleep_amounts: Vec::new(),
         }
     }
     pub fn generate_pid(&mut self) -> Pid {
@@ -162,7 +164,19 @@ impl Scheduler for RoundRobin {
                     }
                     SyscallResult::Pid(new_pid)
                 }
-                Syscall::Sleep(_amount) => SyscallResult::Success,
+                Syscall::Sleep(amount) => {
+                    if let Some(mut running_process) = self.running_process.take() {
+                        running_process.state = ProcessState::Waiting { event: None };
+                        running_process.timings.0 += usize::from(self.timeslice) - remaining;
+                        running_process.timings.1 += 1;
+                        running_process.timings.2 += usize::from(self.timeslice) - remaining;
+                        self.increase_timings(usize::from(self.timeslice) - remaining);
+                        self.wait.push(running_process);
+                        self.sleep_amounts.push(amount);
+                    }
+                    self.running_process = None;
+                    SyscallResult::Success
+                }
                 Syscall::Wait(e) => {
                     // increase all timings
                     if let Some(mut running_process) = self.running_process.take() {
@@ -215,6 +229,7 @@ impl Scheduler for RoundRobin {
                         running_process.timings.1 += 1;
                         running_process.timings.2 += usize::from(self.timeslice) - remaining;
                         self.increase_timings(usize::from(self.timeslice) - remaining);
+                        self.remaining_running_time = remaining;
                     }
                     SyscallResult::Success
                 }
