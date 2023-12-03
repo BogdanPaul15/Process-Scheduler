@@ -125,6 +125,7 @@ impl Scheduler for RoundRobin {
                         running_process.timings.2 += usize::from(self.timeslice) - remaining;
                         self.remaining_running_time = remaining;
                     }
+                    println!("{:?}", self.ready);
                     // Save the remaining time for the running process
                     SyscallResult::Pid(new_pid)
                 }
@@ -148,8 +149,13 @@ impl Scheduler for RoundRobin {
     }
 
     fn list(&mut self) -> Vec<&dyn Process> {
-        let all_refs: Vec<&dyn Process> =
-            self.ready.iter().map(|info| info as &dyn Process).collect();
-        all_refs
+        // let all_refs: Vec<&dyn Process> =
+        //     self.ready.iter().map(|info| info as &dyn Process).collect();
+        // all_refs
+        let mut list: Vec<&dyn Process>;
+        for i in &self.ready {
+            list.push(i)
+        }
+        list
     }
 }
