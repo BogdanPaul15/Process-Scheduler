@@ -149,7 +149,7 @@ impl Scheduler for RoundRobin {
 
     fn list(&mut self) -> Vec<&dyn Process> {
         let all_refs: Vec<&dyn Process> =
-            self.all.iter().map(|info| info as &dyn Process).collect();
+            self.ready.iter().map(|info| info as &dyn Process).collect();
         all_refs
     }
 }
