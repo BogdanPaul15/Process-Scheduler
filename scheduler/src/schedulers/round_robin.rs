@@ -76,24 +76,27 @@ impl Scheduler for RoundRobin {
         // Check if there is a running process
         match self.running_process.take() {
             Some(mut running_process) => {
-                // If a running process exists
+                // Check if the running process still can run
                 if self.remaining_running_time < self.minimum_remaining_timeslice {
-                    // Mark the current running process as Ready and push it to the ready queue
+                    // If it cant run anymore, mark it as Ready and send it to the ready queue
                     running_process.state = ProcessState::Ready;
                     self.ready.push(running_process);
-                    // Get the next process in the ready queue and mark it as running
+                    // Get the first process from the ready queue and mark it as running
                     if !self.ready.is_empty() {
                         let mut proc = self.ready.remove(0);
                         proc.state = ProcessState::Running;
                         self.running_process = Some(proc);
+                        // Return its pid
                         return crate::SchedulingDecision::Run {
-                            pid: self.running_process.as_ref().unwrap().pid,
+                            pid: self.running_process.as_ref().unwrap().pid(),
                             timeslice: self.timeslice,
                         };
                     } else {
+                        // Check for deadlock
                         return crate::SchedulingDecision::Deadlock;
                     }
                 } else {
+                    // Reschedule the running process again
                     return crate::SchedulingDecision::Run {
                         pid: self.running_process.as_ref().unwrap().pid(),
                         timeslice: self.timeslice,
@@ -101,11 +104,13 @@ impl Scheduler for RoundRobin {
                 }
             }
             None => {
-                // There is no running process (primul fork, exit, toate wait sau sleep)
+                // There is no running process
                 if !self.ready.is_empty() {
+                    // Check if the process with pid 1 has exited
                     if self.init {
                         return crate::SchedulingDecision::Panic;
                     }
+                    // Return the first process from the ready queue
                     let mut proc = self.ready.remove(0);
                     proc.state = ProcessState::Running;
                     self.running_process = Some(proc);
@@ -115,7 +120,7 @@ impl Scheduler for RoundRobin {
                     };
                 } else {
                     if !self.wait.is_empty() {
-                        // verifica deadlock
+                        // Check for deadlock
                         let mut is_deadlock = true;
                         for proc in &self.wait {
                             if let ProcessState::Waiting { event } = &proc.state {
@@ -143,6 +148,9 @@ impl Scheduler for RoundRobin {
         match _reason {
             crate::StopReason::Syscall { syscall, remaining } => match syscall {
                 Syscall::Fork(priority) => {
+                    // Increase all total timings
+                    self.increase_timings(usize::from(self.timeslice) - remaining);
+                    // Generate a new process
                     let new_pid = self.generate_pid();
                     let new_process = ProcessInfo {
                         pid: new_pid,
@@ -151,18 +159,17 @@ impl Scheduler for RoundRobin {
                         priority,
                         extra: String::new(),
                     };
+                    // Add it to the ready queue
                     self.ready.push(new_process);
                     if let Some(mut running_process) = self.running_process.take() {
-                        // Update the timings
+                        // Update the timings of the running process
                         running_process.timings.0 += usize::from(self.timeslice) - remaining;
                         running_process.timings.1 += 1;
                         running_process.timings.2 += usize::from(self.timeslice) - remaining;
-                        // increase all timings
-                        self.increase_timings(usize::from(self.timeslice) - remaining);
                         // Save the remaining time for the running process
                         self.remaining_running_time = remaining;
-                        println!("{}", self.remaining_running_time);
                     }
+                    // Return the pid of the just created process
                     SyscallResult::Pid(new_pid)
                 }
                 Syscall::Sleep(amount) => {
