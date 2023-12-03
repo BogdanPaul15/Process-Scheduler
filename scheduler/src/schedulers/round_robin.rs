@@ -99,7 +99,7 @@ impl Scheduler for RoundRobin {
                     };
                 } else {
                     // Handle the case when there's no process available to run
-                    return crate::SchedulingDecision::Panic;
+                    return crate::SchedulingDecision::Done;
                 }
             }
         }
