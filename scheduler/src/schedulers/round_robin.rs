@@ -19,6 +19,7 @@ pub struct RoundRobin {
     pid_counter: usize,
     running_process: Option<ProcessInfo>,
     remaining_running_time: usize,
+    init: bool,
 }
 impl RoundRobin {
     pub fn new(timeslice: NonZeroUsize, minimum_remaining_timeslice: usize) -> Self {
@@ -31,6 +32,7 @@ impl RoundRobin {
             pid_counter: 1,
             running_process: None,
             remaining_running_time: 0,
+            init: false,
         }
     }
     pub fn generate_pid(&mut self) -> Pid {
@@ -61,6 +63,9 @@ impl Process for ProcessInfo {
 
 impl Scheduler for RoundRobin {
     fn next(&mut self) -> crate::SchedulingDecision {
+        if self.init {
+            return crate::SchedulingDecision::Panic;
+        }
         // Check if there is a running process
         match self.running_process.take() {
             Some(mut running_process) => {
@@ -79,7 +84,7 @@ impl Scheduler for RoundRobin {
                             timeslice: self.timeslice,
                         };
                     } else {
-                        return crate::SchedulingDecision::Done;
+                        return crate::SchedulingDecision::Deadlock;
                     }
                 } else {
                     return crate::SchedulingDecision::Run {
@@ -89,6 +94,7 @@ impl Scheduler for RoundRobin {
                 }
             }
             None => {
+                // There is no running process (primul fork, exit, toate wait sau sleep)
                 if !self.ready.is_empty() {
                     let mut proc = self.ready.remove(0);
                     proc.state = ProcessState::Running;
@@ -98,6 +104,20 @@ impl Scheduler for RoundRobin {
                         timeslice: self.timeslice,
                     };
                 } else {
+                    if !self.wait.is_empty() {
+                        // verifica deadlock
+                        let mut is_deadlock = true;
+                        for proc in &self.wait {
+                            if let ProcessState::Waiting { event: None } = &proc.state {
+                                is_deadlock = false;
+                                break;
+                            }
+                        }
+                        if is_deadlock {
+                            return crate::SchedulingDecision::Deadlock;
+                        }
+                        return crate::SchedulingDecision::Done;
+                    }
                     // Handle the case when there's no process available to run
                     return crate::SchedulingDecision::Done;
                 }
@@ -132,6 +152,15 @@ impl Scheduler for RoundRobin {
                 Syscall::Wait(_event) => SyscallResult::Success,
                 Syscall::Signal(_event) => SyscallResult::Success,
                 Syscall::Exit => {
+                    // if self.running_process.pid
+                    // self.running_process = None;
+                    // // update all processes
+                    // SyscallResult::Success
+                    if let Some(running_process) = self.running_process.take() {
+                        if running_process.pid == 1 {
+                            self.init = true;
+                        }
+                    }
                     self.running_process = None;
                     SyscallResult::Success
                 }
@@ -151,9 +180,6 @@ impl Scheduler for RoundRobin {
     }
 
     fn list(&mut self) -> Vec<&dyn Process> {
-        // let all_refs: Vec<&dyn Process> =
-        //     self.ready.iter().map(|info| info as &dyn Process).collect();
-        // all_refs
         let mut list: Vec<&dyn Process> = Vec::new();
         for i in &self.ready {
             list.push(i)
