@@ -131,7 +131,7 @@ impl Scheduler for RoundRobin {
                 Syscall::Sleep(_amount) => SyscallResult::Success,
                 Syscall::Wait(_event) => SyscallResult::Success,
                 Syscall::Signal(_event) => SyscallResult::Success,
-                Syscall::Exit => SyscallResult::Success,
+                Syscall::Exit => SyscallResult::NoRunningProcess,
             },
             crate::StopReason::Expired => {
                 if let Some(mut running_process) = self.running_process.take() {
