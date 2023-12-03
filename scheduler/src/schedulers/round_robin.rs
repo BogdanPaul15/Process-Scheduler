@@ -52,7 +52,7 @@ impl Process for ProcessInfo {
         self.timings
     }
     fn priority(&self) -> i8 {
-        todo!()
+        self.priority
     }
     fn extra(&self) -> String {
         todo!()
