@@ -99,7 +99,7 @@ impl Scheduler for RoundRobin {
                     };
                 } else {
                     // Handle the case when there's no process available to run
-                    return crate::SchedulingDecision::Done;
+                    return crate::SchedulingDecision::Panic;
                 }
             }
         }
@@ -131,7 +131,10 @@ impl Scheduler for RoundRobin {
                 Syscall::Sleep(_amount) => SyscallResult::Success,
                 Syscall::Wait(_event) => SyscallResult::Success,
                 Syscall::Signal(_event) => SyscallResult::Success,
-                Syscall::Exit => SyscallResult::NoRunningProcess,
+                Syscall::Exit => {
+                    self.running_process = None;
+                    SyscallResult::Success
+                }
             },
             crate::StopReason::Expired => {
                 if let Some(mut running_process) = self.running_process.take() {
