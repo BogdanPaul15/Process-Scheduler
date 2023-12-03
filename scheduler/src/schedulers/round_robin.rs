@@ -41,6 +41,14 @@ impl RoundRobin {
         self.pid_counter += 1;
         new_pid
     }
+    pub fn increase_timings(&mut self, amount: usize) {
+        for proc in &mut self.ready {
+            proc.timings.0 += amount;
+        }
+        for proc in &mut self.wait {
+            proc.timings.0 += amount;
+        }
+    }
 }
 
 impl Process for ProcessInfo {
@@ -145,25 +153,25 @@ impl Scheduler for RoundRobin {
                         running_process.timings.0 += usize::from(self.timeslice) - remaining;
                         running_process.timings.1 += 1;
                         running_process.timings.2 += usize::from(self.timeslice) - remaining;
+                        // increase all timings
+                        self.increase_timings(usize::from(self.timeslice) - remaining);
+                        // Save the remaining time for the running process
                         self.remaining_running_time = remaining;
                     }
-                    // Save the remaining time for the running process
                     SyscallResult::Pid(new_pid)
                 }
                 Syscall::Sleep(_amount) => SyscallResult::Success,
                 Syscall::Wait(_event) => SyscallResult::Success,
                 Syscall::Signal(_event) => SyscallResult::Success,
                 Syscall::Exit => {
-                    // if self.running_process.pid
-                    // self.running_process = None;
-                    // // update all processes
-                    // SyscallResult::Success
                     // fa update la timings si syscall
                     if let Some(running_process) = self.running_process.take() {
                         if running_process.pid == 1 {
                             self.init = true;
                         }
                     }
+                    // increase all timings
+                    self.increase_timings(usize::from(self.timeslice) - remaining);
                     self.running_process = None;
                     SyscallResult::Success
                 }
