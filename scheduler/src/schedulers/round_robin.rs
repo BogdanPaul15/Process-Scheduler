@@ -135,7 +135,15 @@ impl Scheduler for RoundRobin {
                         if is_deadlock {
                             return crate::SchedulingDecision::Deadlock;
                         } else {
-                            // sleep for minimum time
+                            let mut min_sleep = std::usize::MAX;
+                            for &amount in &self.sleep_amounts {
+                                if amount < min_sleep {
+                                    min_sleep = amount;
+                                }
+                            }
+                            for mut amount in &self.sleep_amounts {
+                                amount -= min_sleep;
+                            }
                         }
                         return crate::SchedulingDecision::Done;
                     }
@@ -180,7 +188,7 @@ impl Scheduler for RoundRobin {
                         running_process.state = ProcessState::Waiting { event: None };
                         running_process.timings.0 += usize::from(self.timeslice) - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += usize::from(self.timeslice) - remaining;
+                        running_process.timings.2 += usize::from(self.timeslice) - remaining - 1;
                         self.increase_timings(usize::from(self.timeslice) - remaining);
                         self.wait.push(running_process);
                         self.sleep_amounts.push(amount);
@@ -258,12 +266,12 @@ impl Scheduler for RoundRobin {
                 }
             },
             crate::StopReason::Expired => {
-                self.increase_timings(usize::from(self.timeslice));
+                self.increase_timings(usize::from(self.remaining_running_time));
                 if let Some(mut running_process) = self.running_process.take() {
                     // Change its state and update the timings
                     running_process.state = ProcessState::Ready;
-                    running_process.timings.0 += usize::from(self.timeslice);
-                    running_process.timings.2 += usize::from(self.timeslice);
+                    running_process.timings.0 += usize::from(self.remaining_running_time);
+                    running_process.timings.2 += usize::from(self.remaining_running_time);
                     // Push to the ready queue
                     self.ready.push(running_process);
                 }
