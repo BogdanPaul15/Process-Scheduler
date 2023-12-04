@@ -77,7 +77,7 @@ impl Scheduler for RoundRobin {
         match self.running_process.take() {
             Some(mut running_process) => {
                 // Check if the running process still can run
-                if self.remaining_running_time < self.minimum_remaining_timeslice {
+                if self.remaining_running_time >= self.minimum_remaining_timeslice {
                     // If it cant run anymore, mark it as Ready and send it to the ready queue
                     running_process.state = ProcessState::Ready;
                     self.ready.push(running_process);
@@ -109,6 +109,7 @@ impl Scheduler for RoundRobin {
                 if !self.ready.is_empty() {
                     // Check if the process with pid 1 has exited
                     if self.init {
+                        self.init = false;
                         return crate::SchedulingDecision::Panic;
                     }
                     // Return the first process from the ready queue
@@ -168,9 +169,9 @@ impl Scheduler for RoundRobin {
                         running_process.timings.1 += 1;
                         running_process.timings.2 += usize::from(self.timeslice) - remaining - 1;
                         // Save the remaining time for the running process
+                        self.remaining_running_time = remaining;
                         self.running_process = Some(running_process);
                     }
-                    self.remaining_running_time = remaining;
                     // Return the pid of the just created process
                     SyscallResult::Pid(new_pid)
                 }
@@ -267,6 +268,7 @@ impl Scheduler for RoundRobin {
                     self.ready.push(running_process);
                 }
                 self.running_process = None;
+                self.remaining_running_time = 0;
                 SyscallResult::Success
             }
         }
