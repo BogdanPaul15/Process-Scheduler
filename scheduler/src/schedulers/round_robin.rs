@@ -149,7 +149,11 @@ impl Scheduler for RoundRobin {
                                 }
                             }
                             for amount in &mut self.sleep_amounts {
-                                *amount -= min_amount;
+                                if *amount - min_amount <= 0 {
+                                    *amount = 0;
+                                } else {
+                                    *amount -= min_amount;
+                                }
                             }
                             self.sleep_amounts.remove(min_index);
                             let mut wait_index = 0;
@@ -183,24 +187,31 @@ impl Scheduler for RoundRobin {
 
     fn stop(&mut self, _reason: crate::StopReason) -> crate::SyscallResult {
         // Check the indices with zero
-        // let mut zero_amount_indices = Vec::new();
-        // for (index, &amount) in self.sleep_amounts.iter().enumerate() {
-        //     if amount == 0 {
-        //         zero_amount_indices.push(index);
-        //     }
-        // }
-        // let mut wait_index = 0;
-        // self.wait.retain(|proc| {
-        //     if let ProcessState::Waiting { event } = &proc.state {
-        //         if *event == None {
-        //             if zero_amount_indices.iter().any(|&idx| idx == wait_index) {
-        //                 return false;
-        //             }
-        //             wait_index += 1;
-        //         }
-        //     }
-        //     true
-        // });
+        let mut zero_amount_indices = Vec::new();
+        let mut proc_amount_indices = Vec::new();
+        for (index, &amount) in self.sleep_amounts.iter().enumerate() {
+            if amount == 0 {
+                zero_amount_indices.push(index);
+            }
+        }
+        let mut wait_index = 0;
+        for proc in &self.wait {
+            if let ProcessState::Waiting { event } = &proc.state {
+                if *event == None {
+                    proc_amount_indices.push(wait_index);
+                }
+            }
+            wait_index += 1;
+        }
+
+        for i in zero_amount_indices {
+            if let Some(index) = proc_amount_indices.get(i).cloned() {
+                let mut proc = self.wait.remove(index);
+                self.sleep_amounts.remove(i);
+                proc.state = ProcessState::Ready;
+                self.ready.push(proc);
+            }
+        }
 
         match _reason {
             crate::StopReason::Syscall { syscall, remaining } => match syscall {
