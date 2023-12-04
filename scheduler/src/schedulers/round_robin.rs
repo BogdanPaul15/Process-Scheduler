@@ -13,7 +13,7 @@ pub struct ProcessInfo {
 pub struct RoundRobin {
     timeslice: NonZeroUsize,
     minimum_remaining_timeslice: usize,
-    all: Vec<ProcessInfo>,
+    // all: Vec<ProcessInfo>,
     ready: Vec<ProcessInfo>,
     wait: Vec<ProcessInfo>,
     pid_counter: usize,
@@ -136,22 +136,16 @@ impl Scheduler for RoundRobin {
                         if is_deadlock {
                             return crate::SchedulingDecision::Deadlock;
                         } else {
-                            let mut min_amount = std::usize::MAX;
-                            for &amount in &self.sleep_amounts {
-                                if amount < min_amount {
-                                    min_amount = amount;
-                                }
-                            }
-                            // for amount in &mut self.sleep_amounts {
-                            //     *amount -= min_sleep;
+                            // let mut min_amount = std::usize::MAX;
+                            // for &amount in &self.sleep_amounts {
+                            //     if amount < min_amount {
+                            //         min_amount = amount;
+                            //     }
                             // }
-                            // self.increase_timings(min_sleep);
-                            // return crate::SchedulingDecision::Sleep(
-                            //     NonZeroUsize::new(min_sleep).unwrap(),
-                            // );
-                            if let Some(min_nonzero_amount) = NonZeroUsize::new(min_amount) {
-                                return crate::SchedulingDecision::Sleep(min_nonzero_amount);
-                            }
+                            // if let Some(min_nonzero_amount) = NonZeroUsize::new(min_amount) {
+                            //     return crate::SchedulingDecision::Sleep(min_nonzero_amount);
+                            // }
+                            return crate::SchedulingDecision::Done;
                         }
                     }
                     // Handle the case when there's no process available to run
