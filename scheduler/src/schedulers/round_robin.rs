@@ -170,7 +170,6 @@ impl Scheduler for RoundRobin {
                             //         *amount -= min_amount;
                             //     }
                             // }
-                            // self.increase_timings(min_amount);
                             self.sleep_amounts.remove(min_index);
                             let mut wait_index = 0;
                             let mut target_wait_index = 0;
@@ -187,6 +186,7 @@ impl Scheduler for RoundRobin {
                                     }
                                 }
                             }
+                            // Save the minimum amount to update all timings in the next next
                             let proc = self.wait.remove(target_wait_index);
                             self.ready.push(proc);
                             self.sleep = min_amount;
@@ -265,9 +265,10 @@ impl Scheduler for RoundRobin {
                         running_process.timings.2 += self.remaining_running_time - remaining - 1;
                         self.increase_timings(self.remaining_running_time - remaining);
                         self.wait.push(running_process);
-                        // Convert the amount to NonZeroUsize and push it to the sleep_amounts vector
+                        // Push it to the sleep amounts
                         self.sleep_amounts.push(amount);
                     }
+                    self.remaining_running_time = self.timeslice.into();
                     self.running_process = None;
                     SyscallResult::Success
                 }
