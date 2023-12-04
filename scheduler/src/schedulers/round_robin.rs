@@ -96,6 +96,7 @@ impl Scheduler for RoundRobin {
                         return crate::SchedulingDecision::Deadlock;
                     }
                 } else {
+                    self.running_process = Some(running_process);
                     // Reschedule the running process again
                     return crate::SchedulingDecision::Run {
                         pid: self.running_process.as_ref().unwrap().pid(),
