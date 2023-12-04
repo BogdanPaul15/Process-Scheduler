@@ -263,9 +263,9 @@ impl Scheduler for RoundRobin {
                         running_process.timings.1 += 1;
                         running_process.timings.2 += self.remaining_running_time - remaining - 1;
                         self.increase_timings(self.remaining_running_time - remaining);
-                        self.remaining_running_time = remaining;
                         self.wait.push(running_process);
                     }
+                    self.remaining_running_time = self.timeslice.into();
                     self.running_process = None;
                     SyscallResult::Success
                 }
