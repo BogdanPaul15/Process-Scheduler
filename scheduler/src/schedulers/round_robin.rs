@@ -52,7 +52,11 @@ impl RoundRobin {
             proc.timings.0 += amount;
         }
         for sleep in &mut self.sleep_amounts {
-            *sleep -= amount;
+            if *sleep < amount {
+                *sleep = 0;
+            } else {
+                *sleep -= amount;
+            }
         }
     }
 }
@@ -154,11 +158,11 @@ impl Scheduler for RoundRobin {
                                 }
                             }
                             for amount in &mut self.sleep_amounts {
-                                // if *amount - min_amount < 0 {
-                                //     *amount = 0;
-                                // } else {
-                                *amount -= min_amount;
-                                // }
+                                if *amount < min_amount {
+                                    *amount = 0;
+                                } else {
+                                    *amount -= min_amount;
+                                }
                             }
                             self.sleep_amounts.remove(min_index);
                             let mut wait_index = 0;
@@ -282,9 +286,9 @@ impl Scheduler for RoundRobin {
                         }
                     }
                     for i in procs_to_ready {
-                        let mut proc = self.wait.remove(i);
-                        proc.state = ProcessState::Ready;
-                        self.ready.push(proc);
+                        let mut new_proc = self.wait.remove(i);
+                        new_proc.state = ProcessState::Ready;
+                        self.ready.push(new_proc);
                     }
                     if let Some(mut running_process) = self.running_process.take() {
                         running_process.timings.0 += self.remaining_running_time - remaining;
