@@ -1,3 +1,4 @@
+use core::time;
 use std::num::NonZeroUsize;
 
 use crate::{Pid, Process, ProcessState, Scheduler, Syscall, SyscallResult};
@@ -32,7 +33,7 @@ impl RoundRobin {
             wait: Vec::new(),
             pid_counter: 1,
             running_process: None,
-            remaining_running_time: 0,
+            remaining_running_time: timeslice.into(),
             init: false,
             sleep_amounts: Vec::new(),
             sleep: 0,
