@@ -263,21 +263,20 @@ impl Scheduler for RoundRobin {
                         running_process.timings.1 += 1;
                         running_process.timings.2 += self.remaining_running_time - remaining - 1;
                         self.increase_timings(self.remaining_running_time - remaining);
+                        self.remaining_running_time = remaining;
                         self.wait.push(running_process);
                     }
                     self.running_process = None;
                     SyscallResult::Success
                 }
                 Syscall::Signal(e) => {
-                    let mut index = 0;
                     let mut procs_to_ready = Vec::new();
-                    for proc in &self.wait {
+                    for (index, proc) in self.wait.iter().enumerate() {
                         if let ProcessState::Waiting { event } = &proc.state {
                             if *event == Some(e) {
                                 procs_to_ready.push(index);
                             }
                         }
-                        index += 0;
                     }
                     for i in procs_to_ready {
                         let mut new_proc = self.wait.remove(i);
