@@ -175,24 +175,24 @@ impl Scheduler for RoundRobin {
 
     fn stop(&mut self, _reason: crate::StopReason) -> crate::SyscallResult {
         // Check the indices with zero
-        let mut zero_amount_indices = Vec::new();
-        for (index, &amount) in self.sleep_amounts.iter().enumerate() {
-            if amount == 0 {
-                zero_amount_indices.push(index);
-            }
-        }
-        let mut wait_index = 0;
-        self.wait.retain(|proc| {
-            if let ProcessState::Waiting { event } = &proc.state {
-                if *event == None {
-                    if zero_amount_indices.iter().any(|&idx| idx == wait_index) {
-                        return false;
-                    }
-                    wait_index += 1;
-                }
-            }
-            true
-        });
+        // let mut zero_amount_indices = Vec::new();
+        // for (index, &amount) in self.sleep_amounts.iter().enumerate() {
+        //     if amount == 0 {
+        //         zero_amount_indices.push(index);
+        //     }
+        // }
+        // let mut wait_index = 0;
+        // self.wait.retain(|proc| {
+        //     if let ProcessState::Waiting { event } = &proc.state {
+        //         if *event == None {
+        //             if zero_amount_indices.iter().any(|&idx| idx == wait_index) {
+        //                 return false;
+        //             }
+        //             wait_index += 1;
+        //         }
+        //     }
+        //     true
+        // });
 
         match _reason {
             crate::StopReason::Syscall { syscall, remaining } => match syscall {
