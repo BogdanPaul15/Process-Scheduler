@@ -281,13 +281,12 @@ impl Scheduler for RoundRobin {
                             }
                         }
                     }
-                    for i in procs_to_ready {
-                        let mut new_proc = self.wait.remove(i);
+                    for i in &procs_to_ready {
+                        let mut new_proc = self.wait.remove(*i);
                         new_proc.state = ProcessState::Ready;
                         self.ready.push(new_proc);
                     }
                     if let Some(mut running_process) = self.running_process.take() {
-                        // running_process.state = ProcessState::Waiting { event: (Some(e)) };
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
                         running_process.timings.2 += self.remaining_running_time - remaining - 1;
