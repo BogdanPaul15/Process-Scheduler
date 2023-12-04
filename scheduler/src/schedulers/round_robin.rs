@@ -1,4 +1,3 @@
-use core::time;
 use std::num::NonZeroUsize;
 
 use crate::{Pid, Process, ProcessState, Scheduler, Syscall, SyscallResult};
