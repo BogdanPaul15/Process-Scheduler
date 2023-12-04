@@ -86,10 +86,11 @@ impl Scheduler for RoundRobin {
                         let mut proc = self.ready.remove(0);
                         proc.state = ProcessState::Running;
                         self.running_process = Some(proc);
+                        self.remaining_running_time = self.timeslice.into();
                         // Return its pid
                         return crate::SchedulingDecision::Run {
                             pid: self.running_process.as_ref().unwrap().pid(),
-                            timeslice: self.timeslice,
+                            timeslice: NonZeroUsize::new(self.remaining_running_time).unwrap(),
                         };
                     } else {
                         // Check for deadlock
