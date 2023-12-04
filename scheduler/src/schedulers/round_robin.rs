@@ -219,10 +219,11 @@ impl Scheduler for RoundRobin {
             }
         }
 
-        for i in zero_amount_indices {
-            if let Some(index) = proc_amount_indices.get(i).cloned() {
+        for (iter, i) in zero_amount_indices.iter().enumerate() {
+            let new_index = i - iter;
+            if let Some(index) = proc_amount_indices.get(new_index).cloned() {
                 let mut proc = self.wait.remove(index);
-                self.sleep_amounts.remove(i);
+                self.sleep_amounts.remove(new_index);
                 proc.state = ProcessState::Ready;
                 self.ready.push(proc);
             }
