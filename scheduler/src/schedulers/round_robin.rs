@@ -76,6 +76,7 @@ impl Scheduler for RoundRobin {
     fn next(&mut self) -> crate::SchedulingDecision {
         // Check if there is a running process
         self.increase_timings(self.sleep);
+        self.sleep = 0;
         match self.running_process.take() {
             Some(mut running_process) => {
                 // Check if the running process still can run
