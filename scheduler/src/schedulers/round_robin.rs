@@ -162,14 +162,14 @@ impl Scheduler for RoundRobin {
                                     min_index = index;
                                 }
                             }
-                            // Update all timings
-                            for amount in &mut self.sleep_amounts {
-                                if *amount < min_amount {
-                                    *amount = 0;
-                                } else {
-                                    *amount -= min_amount;
-                                }
-                            }
+                            // // Update all timings
+                            // for amount in &mut self.sleep_amounts {
+                            //     if *amount < min_amount {
+                            //         *amount = 0;
+                            //     } else {
+                            //         *amount -= min_amount;
+                            //     }
+                            // }
                             // self.increase_timings(min_amount);
                             self.sleep_amounts.remove(min_index);
                             let mut wait_index = 0;
