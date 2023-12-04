@@ -124,11 +124,11 @@ impl Scheduler for RoundRobin {
                         timeslice: self.timeslice,
                     };
                 } else {
-                    if self.init {
-                        self.init = false;
-                        return crate::SchedulingDecision::Panic;
-                    }
                     if !self.wait.is_empty() {
+                        if self.init {
+                            self.init = false;
+                            return crate::SchedulingDecision::Panic;
+                        }
                         // Check for deadlock
                         let mut is_deadlock = true;
                         for proc in &self.wait {
