@@ -256,6 +256,7 @@ impl Scheduler for RoundRobin {
                 }
             },
             crate::StopReason::Expired => {
+                self.increase_timings(usize::from(self.timeslice));
                 if let Some(mut running_process) = self.running_process.take() {
                     // Change its state and update the timings
                     running_process.state = ProcessState::Ready;
@@ -264,7 +265,6 @@ impl Scheduler for RoundRobin {
                     // Push to the ready queue
                     self.ready.push(running_process);
                 }
-                self.increase_timings(usize::from(self.timeslice));
                 SyscallResult::Success
             }
         }
