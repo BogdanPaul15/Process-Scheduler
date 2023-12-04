@@ -111,11 +111,11 @@ impl Scheduler for RoundRobin {
             }
             None => {
                 // There is no running process
-                if self.init {
-                    self.init = false;
-                    return crate::SchedulingDecision::Panic;
-                }
                 if !self.ready.is_empty() {
+                    if self.init {
+                        self.init = false;
+                        return crate::SchedulingDecision::Panic;
+                    }
                     // Check if the process with pid 1 has exited
                     // Return the first process from the ready queue
                     let mut proc = self.ready.remove(0);
