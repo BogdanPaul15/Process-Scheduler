@@ -21,6 +21,7 @@ pub struct RoundRobin {
     remaining_running_time: usize,
     init: bool,
     sleep_amounts: Vec<usize>,
+    sleep: usize,
 }
 impl RoundRobin {
     pub fn new(timeslice: NonZeroUsize, minimum_remaining_timeslice: usize) -> Self {
@@ -34,6 +35,7 @@ impl RoundRobin {
             remaining_running_time: 0,
             init: false,
             sleep_amounts: Vec::new(),
+            sleep: 0,
         }
     }
     pub fn generate_pid(&mut self) -> Pid {
@@ -73,6 +75,7 @@ impl Process for ProcessInfo {
 impl Scheduler for RoundRobin {
     fn next(&mut self) -> crate::SchedulingDecision {
         // Check if there is a running process
+        self.increase_timings(self.sleep);
         match self.running_process.take() {
             Some(mut running_process) => {
                 // Check if the running process still can run
@@ -143,6 +146,9 @@ impl Scheduler for RoundRobin {
                                     min_index = index;
                                 }
                             }
+                            for amount in &mut self.sleep_amounts {
+                                *amount -= min_amount;
+                            }
                             self.sleep_amounts.remove(min_index);
                             let mut wait_index = 0;
                             let mut target_wait_index = 0;
@@ -161,7 +167,7 @@ impl Scheduler for RoundRobin {
                             let mut proc = self.wait.remove(target_wait_index);
                             proc.state = ProcessState::Ready;
                             self.ready.push(proc);
-                            self.increase_timings(min_amount);
+                            self.sleep = min_amount;
                             return crate::SchedulingDecision::Sleep(
                                 NonZeroUsize::new(min_amount).unwrap(),
                             );
