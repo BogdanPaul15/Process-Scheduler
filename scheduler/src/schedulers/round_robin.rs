@@ -135,18 +135,34 @@ impl Scheduler for RoundRobin {
                         if is_deadlock {
                             return crate::SchedulingDecision::Deadlock;
                         } else {
-                            // let mut min_amount = std::usize::MAX;
-                            // for &amount in &self.sleep_amounts {
-                            //     if amount < min_amount {
-                            //         min_amount = amount;
-                            //     }
-                            // }
-                            // if let Some(min_nonzero_amount) = NonZeroUsize::new(min_amount) {
-                            //     return crate::SchedulingDecision::Sleep(min_nonzero_amount);
-                            // }
-                            // return crate::SchedulingDecision::Sleep(
-                            //     NonZeroUsize::new(10).unwrap(),
-                            // );
+                            let mut min_amount = std::usize::MAX;
+                            let mut min_index = 0;
+                            for (index, &amount) in self.sleep_amounts.iter().enumerate() {
+                                if amount < min_amount {
+                                    min_amount = amount;
+                                    min_index = index;
+                                }
+                            }
+                            let mut wait_index = 0;
+                            let mut target_wait_index = 0;
+
+                            for (index, proc) in self.wait.iter().enumerate() {
+                                if let ProcessState::Waiting { event } = &proc.state {
+                                    if *event == None {
+                                        if wait_index == min_index {
+                                            target_wait_index = index;
+                                            break;
+                                        }
+                                        wait_index += 1;
+                                    }
+                                }
+                            }
+                            let mut proc = self.wait.remove(target_wait_index);
+                            proc.state = ProcessState::Ready;
+                            self.ready.push(proc);
+                            return crate::SchedulingDecision::Sleep(
+                                NonZeroUsize::new(min_amount).unwrap(),
+                            );
                         }
                     }
                     // Handle the case when there's no process available to run
@@ -157,6 +173,26 @@ impl Scheduler for RoundRobin {
     }
 
     fn stop(&mut self, _reason: crate::StopReason) -> crate::SyscallResult {
+        // Check the indices with zero
+        let mut zero_amount_indices = Vec::new();
+        for (index, &amount) in self.sleep_amounts.iter().enumerate() {
+            if amount == 0 {
+                zero_amount_indices.push(index);
+            }
+        }
+        let mut wait_index = 0;
+        self.wait.retain(|proc| {
+            if let ProcessState::Waiting { event } = &proc.state {
+                if *event == None {
+                    if zero_amount_indices.iter().any(|&idx| idx == wait_index) {
+                        return false;
+                    }
+                    wait_index += 1;
+                }
+            }
+            true
+        });
+
         match _reason {
             crate::StopReason::Syscall { syscall, remaining } => match syscall {
                 Syscall::Fork(priority) => {
