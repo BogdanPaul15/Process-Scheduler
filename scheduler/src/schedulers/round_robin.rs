@@ -130,7 +130,7 @@ impl Scheduler for RoundRobin {
                         let mut is_deadlock = true;
                         for proc in &self.wait {
                             if let ProcessState::Waiting { event } = &proc.state {
-                                if *event == None {
+                                if Option::is_none(event) {
                                     is_deadlock = false;
                                     break;
                                 }
@@ -160,7 +160,7 @@ impl Scheduler for RoundRobin {
 
                             for (index, proc) in self.wait.iter().enumerate() {
                                 if let ProcessState::Waiting { event } = &proc.state {
-                                    if *event == None {
+                                    if Option::is_none(event) {
                                         if wait_index == min_index {
                                             target_wait_index = index;
                                             break;
@@ -193,14 +193,12 @@ impl Scheduler for RoundRobin {
                 zero_amount_indices.push(index);
             }
         }
-        let mut wait_index = 0;
-        for proc in &self.wait {
+        for (wait_index, proc) in self.wait.iter().enumerate() {
             if let ProcessState::Waiting { event } = &proc.state {
-                if *event == None {
+                if Option::is_none(event) {
                     proc_amount_indices.push(wait_index);
                 }
             }
-            wait_index += 1;
         }
 
         for i in zero_amount_indices {
