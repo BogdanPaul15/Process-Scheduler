@@ -293,8 +293,9 @@ impl Scheduler for RoundRobin {
                             }
                         }
                     }
-                    for i in procs_to_ready {
-                        let mut new_proc = self.wait.remove(i);
+                    for (index, i) in procs_to_ready.iter().enumerate() {
+                        let modified_index = i - index;
+                        let mut new_proc = self.wait.remove(modified_index);
                         new_proc.state = ProcessState::Ready;
                         self.ready.push(new_proc);
                     }
