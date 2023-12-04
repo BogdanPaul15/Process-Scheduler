@@ -136,17 +136,19 @@ impl Scheduler for RoundRobin {
                         if is_deadlock {
                             return crate::SchedulingDecision::Deadlock;
                         } else {
-                            // let mut min_sleep = std::usize::MAX;
-                            // for &amount in &self.sleep_amounts {
-                            //     if amount < min_sleep {
-                            //         min_sleep = amount;
-                            //     }
-                            // }
-                            // for mut amount in &self.sleep_amounts {
-                            //     amount -= min_sleep;
-                            // }
+                            let mut min_sleep = std::usize::MAX;
+                            for &amount in &self.sleep_amounts {
+                                if amount < min_sleep {
+                                    min_sleep = amount;
+                                }
+                            }
+                            for amount in &mut self.sleep_amounts {
+                                *amount -= min_sleep;
+                            }
+                            return crate::SchedulingDecision::Sleep(
+                                NonZeroUsize::new(min_sleep).unwrap(),
+                            );
                         }
-                        return crate::SchedulingDecision::Done;
                     }
                     // Handle the case when there's no process available to run
                     return crate::SchedulingDecision::Done;
