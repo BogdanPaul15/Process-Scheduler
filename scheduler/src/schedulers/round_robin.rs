@@ -115,7 +115,6 @@ impl Scheduler for RoundRobin {
                         self.init = false;
                         return crate::SchedulingDecision::Panic;
                     }
-                    // Check if the process with pid 1 has exited
                     // Return the first process from the ready queue
                     let mut proc = self.ready.remove(0);
                     proc.state = ProcessState::Running;
@@ -125,6 +124,10 @@ impl Scheduler for RoundRobin {
                         timeslice: self.timeslice,
                     };
                 } else {
+                    if self.init {
+                        self.init = false;
+                        return crate::SchedulingDecision::Panic;
+                    }
                     if !self.wait.is_empty() {
                         // Check for deadlock
                         let mut is_deadlock = true;
