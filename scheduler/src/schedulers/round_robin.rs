@@ -303,7 +303,6 @@ impl Scheduler for RoundRobin {
                     }
                     // increase all timings
                     self.increase_timings(self.remaining_running_time - remaining);
-                    self.remaining_running_time = remaining;
                     self.running_process = None;
                     SyscallResult::Success
                 }
