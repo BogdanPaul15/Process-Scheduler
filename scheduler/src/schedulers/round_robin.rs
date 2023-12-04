@@ -82,7 +82,7 @@ impl Process for ProcessInfo {
 
 impl Scheduler for RoundRobin {
     fn next(&mut self) -> crate::SchedulingDecision {
-        // Increase all timings after a sleep (if 0, it will increase by 0)
+        // Increase all timings after a sleep (if 0, it will increase with 0)
         self.increase_timings(self.sleep);
         self.sleep = 0;
 
@@ -299,6 +299,8 @@ impl Scheduler for RoundRobin {
                     SyscallResult::Success
                 }
                 Syscall::Signal(e) => {
+                    // Increase all timings
+                    self.increase_timings(self.remaining_running_time - remaining);
                     // Awaken all the processes that wait for the 'e' event
                     // First, save their indexes
                     let mut procs_to_ready = Vec::new();
@@ -317,8 +319,6 @@ impl Scheduler for RoundRobin {
                         new_proc.state = ProcessState::Ready;
                         self.ready.push(new_proc);
                     }
-                    // Increase all timings
-                    self.increase_timings(self.remaining_running_time - remaining);
                     if let Some(mut running_process) = self.running_process.take() {
                         // Update the timings of the running process and the remaining time
                         running_process.timings.0 += self.remaining_running_time - remaining;
