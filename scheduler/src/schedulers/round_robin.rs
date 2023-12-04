@@ -136,19 +136,22 @@ impl Scheduler for RoundRobin {
                         if is_deadlock {
                             return crate::SchedulingDecision::Deadlock;
                         } else {
-                            let mut min_sleep = std::usize::MAX;
+                            let mut min_amount = std::usize::MAX;
                             for &amount in &self.sleep_amounts {
-                                if amount < min_sleep {
-                                    min_sleep = amount;
+                                if amount < min_amount {
+                                    min_amount = amount;
                                 }
                             }
                             // for amount in &mut self.sleep_amounts {
                             //     *amount -= min_sleep;
                             // }
-                            self.increase_timings(min_sleep);
-                            return crate::SchedulingDecision::Sleep(
-                                NonZeroUsize::new(min_sleep).unwrap(),
-                            );
+                            // self.increase_timings(min_sleep);
+                            // return crate::SchedulingDecision::Sleep(
+                            //     NonZeroUsize::new(min_sleep).unwrap(),
+                            // );
+                            if let Some(min_nonzero_amount) = NonZeroUsize::new(min_amount) {
+                                return crate::SchedulingDecision::Sleep(min_nonzero_amount);
+                            }
                         }
                     }
                     // Handle the case when there's no process available to run
@@ -195,6 +198,7 @@ impl Scheduler for RoundRobin {
                         running_process.timings.2 += usize::from(self.timeslice) - remaining - 1;
                         self.increase_timings(usize::from(self.timeslice) - remaining);
                         self.wait.push(running_process);
+                        // Convert the amount to NonZeroUsize and push it to the sleep_amounts vector
                         self.sleep_amounts.push(amount);
                     }
                     self.running_process = None;
