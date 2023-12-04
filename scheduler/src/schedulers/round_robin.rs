@@ -275,38 +275,21 @@ impl Scheduler for RoundRobin {
                     SyscallResult::Success
                 }
                 Syscall::Signal(e) => {
-                    // for proc in &mut self.wait {
-                    //     if let ProcessState::Waiting { event } = &proc.state {
-                    //         if *event == Some(e) {
-                    //             proc.state = ProcessState::Ready;
-                    //             let new_proc = ProcessInfo {
-                    //                 pid: proc.pid,
-                    //                 state: ProcessState::Ready,
-                    //                 timings: proc.timings,
-                    //                 priority: proc.priority,
-                    //                 extra: proc.extra.clone(),
-                    //             };
-                    //             self.ready.push(new_proc);
-                    //             self.wait.remove(new_proc);
-                    //         }
-                    //     }
-                    // }
-                    self.wait.retain(|proc| {
+                    let mut index = 0;
+                    let mut procs_to_ready = Vec::new();
+                    for proc in &self.wait {
                         if let ProcessState::Waiting { event } = &proc.state {
                             if *event == Some(e) {
-                                let new_proc = ProcessInfo {
-                                    pid: proc.pid,
-                                    state: ProcessState::Ready,
-                                    timings: proc.timings,
-                                    priority: proc.priority,
-                                    extra: proc.extra.clone(),
-                                };
-                                self.ready.push(new_proc);
-                                return false;
+                                procs_to_ready.push(index);
                             }
                         }
-                        true
-                    });
+                        index += 0;
+                    }
+                    for i in procs_to_ready {
+                        let mut new_proc = self.wait.remove(i);
+                        new_proc.state = ProcessState::Ready;
+                        self.ready.push(new_proc);
+                    }
                     if let Some(mut running_process) = self.running_process.take() {
                         running_process.state = ProcessState::Waiting { event: (Some(e)) };
                         running_process.timings.0 += usize::from(self.timeslice) - remaining;
@@ -314,6 +297,7 @@ impl Scheduler for RoundRobin {
                         running_process.timings.2 += usize::from(self.timeslice) - remaining;
                         self.increase_timings(usize::from(self.timeslice) - remaining);
                         self.remaining_running_time = remaining;
+                        self.running_process = Some(running_process);
                     }
                     SyscallResult::Success
                 }
