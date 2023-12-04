@@ -77,7 +77,7 @@ impl Scheduler for RoundRobin {
         match self.running_process.take() {
             Some(mut running_process) => {
                 // Check if the running process still can run
-                if self.remaining_running_time >= self.minimum_remaining_timeslice {
+                if self.remaining_running_time < self.minimum_remaining_timeslice {
                     // If it cant run anymore, mark it as Ready and send it to the ready queue
                     running_process.state = ProcessState::Ready;
                     self.ready.push(running_process);
@@ -96,12 +96,11 @@ impl Scheduler for RoundRobin {
                         return crate::SchedulingDecision::Deadlock;
                     }
                 } else {
-                    self.remaining_running_time = self.timeslice.into();
                     self.running_process = Some(running_process);
                     // Reschedule the running process again
                     return crate::SchedulingDecision::Run {
                         pid: self.running_process.as_ref().unwrap().pid(),
-                        timeslice: self.timeslice,
+                        timeslice: NonZeroUsize::new(self.remaining_running_time).unwrap(),
                     };
                 }
             }
