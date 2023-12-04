@@ -13,7 +13,6 @@ pub struct ProcessInfo {
 pub struct RoundRobin {
     timeslice: NonZeroUsize,
     minimum_remaining_timeslice: usize,
-    // all: Vec<ProcessInfo>,
     ready: Vec<ProcessInfo>,
     wait: Vec<ProcessInfo>,
     pid_counter: usize,
@@ -83,8 +82,10 @@ impl Process for ProcessInfo {
 
 impl Scheduler for RoundRobin {
     fn next(&mut self) -> crate::SchedulingDecision {
+        // Increase all timings after a sleep (if 0, it will increase by 0)
         self.increase_timings(self.sleep);
         self.sleep = 0;
+
         match self.running_process.take() {
             Some(mut running_process) => {
                 // If there is a running process, check if it can be rescheduled
@@ -108,6 +109,7 @@ impl Scheduler for RoundRobin {
                         crate::SchedulingDecision::Deadlock
                     }
                 } else {
+                    // Regain ownership
                     self.running_process = Some(running_process);
                     // Reschedule the running process again
                     return crate::SchedulingDecision::Run {
@@ -134,12 +136,12 @@ impl Scheduler for RoundRobin {
                     };
                 } else {
                     if !self.wait.is_empty() {
-                        // Both ready queue and wait queue are empty, check for panic
+                        // Both ready queue and wait queues are empty, check for panic
                         if self.init {
                             self.init = false;
                             return crate::SchedulingDecision::Panic;
                         }
-                        // Check for deadlock
+                        // Check for deadlock (there are only processes that wait for a signal in the wait queue)
                         let mut is_deadlock = true;
                         for proc in &self.wait {
                             if let ProcessState::Waiting { event } = &proc.state {
@@ -152,7 +154,7 @@ impl Scheduler for RoundRobin {
                         if is_deadlock {
                             return crate::SchedulingDecision::Deadlock;
                         } else {
-                            // Sleep the processor for a minimum amount until some process wakes up
+                            // Sleep the processor for a minimum amount of time until some process wakes up
                             let mut min_amount = std::usize::MAX;
                             let mut min_index = 0;
                             // Compute the minimum and get its index
@@ -170,6 +172,7 @@ impl Scheduler for RoundRobin {
                             //         *amount -= min_amount;
                             //     }
                             // }
+                            // Remove its sleep amount
                             self.sleep_amounts.remove(min_index);
                             let mut wait_index = 0;
                             let mut target_wait_index = 0;
@@ -191,6 +194,7 @@ impl Scheduler for RoundRobin {
                             self.ready.push(proc);
                             self.sleep = min_amount;
                             return crate::SchedulingDecision::Sleep(
+                                // Sleep the processor for a minimum amount of time
                                 NonZeroUsize::new(min_amount).unwrap(),
                             );
                         }
@@ -203,14 +207,16 @@ impl Scheduler for RoundRobin {
     }
 
     fn stop(&mut self, _reason: crate::StopReason) -> crate::SyscallResult {
-        // Check the indices with zero
+        // Take the awakened processes from the queue and make them ready
         let mut zero_amount_indices = Vec::new();
         let mut proc_amount_indices = Vec::new();
+        // Save the indices of the processes that have 0 amount to sleep
         for (index, &amount) in self.sleep_amounts.iter().enumerate() {
             if amount == 0 {
                 zero_amount_indices.push(index);
             }
         }
+        // Save the indexes of all sleeping processes from wait
         for (wait_index, proc) in self.wait.iter().enumerate() {
             if let ProcessState::Waiting { event } = &proc.state {
                 if Option::is_none(event) {
@@ -219,6 +225,8 @@ impl Scheduler for RoundRobin {
             }
         }
 
+        // Remove the sleep(0) processes, and then update the new indexes
+        // (because if you remove an element from a vec, the other indexes will be index - 1)
         for (iter, i) in zero_amount_indices.iter().enumerate() {
             let new_index = i - iter;
             if let Some(index) = proc_amount_indices.get(new_index).cloned() {
@@ -249,7 +257,7 @@ impl Scheduler for RoundRobin {
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
                         running_process.timings.2 += self.remaining_running_time - remaining - 1;
-                        // Save the remaining time for the running process
+                        // Save the remaining time for the running process and regain ownership
                         self.remaining_running_time = remaining;
                         self.running_process = Some(running_process);
                     }
@@ -257,35 +265,42 @@ impl Scheduler for RoundRobin {
                     SyscallResult::Pid(new_pid)
                 }
                 Syscall::Sleep(amount) => {
+                    // Increase all timings
+                    self.increase_timings(self.remaining_running_time - remaining);
                     if let Some(mut running_process) = self.running_process.take() {
+                        // Update the timings of the running process and push it to the wait queue
                         running_process.state = ProcessState::Waiting { event: None };
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
                         running_process.timings.2 += self.remaining_running_time - remaining - 1;
-                        self.increase_timings(self.remaining_running_time - remaining);
                         self.wait.push(running_process);
-                        // Push it to the sleep amounts
+                        // Push the sleep amount
                         self.sleep_amounts.push(amount);
                     }
+                    // Reset the running process
                     self.remaining_running_time = self.timeslice.into();
                     self.running_process = None;
                     SyscallResult::Success
                 }
                 Syscall::Wait(e) => {
-                    // increase all timings
+                    // Increase all timings
+                    self.increase_timings(self.remaining_running_time - remaining);
                     if let Some(mut running_process) = self.running_process.take() {
+                        // Update the timings of the running process and push it to the wait queue
                         running_process.state = ProcessState::Waiting { event: (Some(e)) };
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
                         running_process.timings.2 += self.remaining_running_time - remaining - 1;
-                        self.increase_timings(self.remaining_running_time - remaining);
                         self.wait.push(running_process);
                     }
+                    // Reset the running process
                     self.remaining_running_time = self.timeslice.into();
                     self.running_process = None;
                     SyscallResult::Success
                 }
                 Syscall::Signal(e) => {
+                    // Awaken all the processes that wait for the 'e' event
+                    // First, save their indexes
                     let mut procs_to_ready = Vec::new();
                     for (index, proc) in self.wait.iter().enumerate() {
                         if let ProcessState::Waiting { event } = &proc.state {
@@ -294,36 +309,43 @@ impl Scheduler for RoundRobin {
                             }
                         }
                     }
+                    // Remove them from the wait queue, mark them as Ready and push to the ready queue
                     for (index, i) in procs_to_ready.iter().enumerate() {
+                        // Keep track of the modified index when removing
                         let modified_index = i - index;
                         let mut new_proc = self.wait.remove(modified_index);
                         new_proc.state = ProcessState::Ready;
                         self.ready.push(new_proc);
                     }
+                    // Increase all timings
+                    self.increase_timings(self.remaining_running_time - remaining);
                     if let Some(mut running_process) = self.running_process.take() {
+                        // Update the timings of the running process and the remaining time
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
                         running_process.timings.2 += self.remaining_running_time - remaining - 1;
-                        self.increase_timings(self.remaining_running_time - remaining);
                         self.remaining_running_time = remaining;
                         self.running_process = Some(running_process);
                     }
                     SyscallResult::Success
                 }
                 Syscall::Exit => {
+                    // Increase all timings
+                    self.increase_timings(self.remaining_running_time - remaining);
+                    // Verify if process with pid 1 has exited
                     if let Some(running_process) = self.running_process.take() {
                         if running_process.pid == 1 {
                             self.init = true;
                         }
                     }
-                    // increase all timings
-                    self.increase_timings(self.remaining_running_time - remaining);
+                    // Reset running process
                     self.remaining_running_time = self.timeslice.into();
                     self.running_process = None;
                     SyscallResult::Success
                 }
             },
             crate::StopReason::Expired => {
+                // Increase all timings
                 self.increase_timings(self.remaining_running_time);
                 if let Some(mut running_process) = self.running_process.take() {
                     // Change its state and update the timings
@@ -333,6 +355,7 @@ impl Scheduler for RoundRobin {
                     // Push to the ready queue
                     self.ready.push(running_process);
                 }
+                // Reset the running process
                 self.running_process = None;
                 self.remaining_running_time = self.timeslice.into();
                 SyscallResult::Success
@@ -341,6 +364,7 @@ impl Scheduler for RoundRobin {
     }
 
     fn list(&mut self) -> Vec<&dyn Process> {
+        // List all processes from my Scheduler
         let mut list: Vec<&dyn Process> = Vec::new();
         for i in &self.ready {
             list.push(i)
