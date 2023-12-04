@@ -206,7 +206,7 @@ impl Scheduler for RoundRobin {
             crate::StopReason::Syscall { syscall, remaining } => match syscall {
                 Syscall::Fork(priority) => {
                     // Increase all total timings
-                    self.increase_timings(usize::from(self.timeslice) - remaining);
+                    self.increase_timings(usize::from(self.remaining_running_time) - remaining);
                     // Generate a new process
                     let new_pid = self.generate_pid();
                     let new_process = ProcessInfo {
@@ -220,9 +220,11 @@ impl Scheduler for RoundRobin {
                     self.ready.push(new_process);
                     if let Some(mut running_process) = self.running_process.take() {
                         // Update the timings of the running process
-                        running_process.timings.0 += usize::from(self.timeslice) - remaining;
+                        running_process.timings.0 +=
+                            usize::from(self.remaining_running_time) - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += usize::from(self.timeslice) - remaining - 1;
+                        running_process.timings.2 +=
+                            usize::from(self.remaining_running_time) - remaining - 1;
                         // Save the remaining time for the running process
                         self.remaining_running_time = remaining;
                         self.running_process = Some(running_process);
@@ -233,10 +235,12 @@ impl Scheduler for RoundRobin {
                 Syscall::Sleep(amount) => {
                     if let Some(mut running_process) = self.running_process.take() {
                         running_process.state = ProcessState::Waiting { event: None };
-                        running_process.timings.0 += usize::from(self.timeslice) - remaining;
+                        running_process.timings.0 +=
+                            usize::from(self.remaining_running_time) - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += usize::from(self.timeslice) - remaining - 1;
-                        self.increase_timings(usize::from(self.timeslice) - remaining);
+                        running_process.timings.2 +=
+                            usize::from(self.remaining_running_time) - remaining - 1;
+                        self.increase_timings(usize::from(self.remaining_running_time) - remaining);
                         self.wait.push(running_process);
                         // Convert the amount to NonZeroUsize and push it to the sleep_amounts vector
                         self.sleep_amounts.push(amount);
@@ -308,7 +312,7 @@ impl Scheduler for RoundRobin {
                         }
                     }
                     // increase all timings
-                    self.increase_timings(usize::from(self.timeslice) - remaining);
+                    self.increase_timings(usize::from(self.remaining_running_time) - remaining);
                     self.running_process = None;
                     SyscallResult::Success
                 }
