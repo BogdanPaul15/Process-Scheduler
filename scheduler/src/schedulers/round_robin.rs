@@ -168,6 +168,7 @@ impl Scheduler for RoundRobin {
                         running_process.timings.2 += usize::from(self.timeslice) - remaining;
                         // Save the remaining time for the running process
                         self.remaining_running_time = remaining;
+                        self.running_process = Some(running_process);
                     }
                     // Return the pid of the just created process
                     SyscallResult::Pid(new_pid)
@@ -263,6 +264,7 @@ impl Scheduler for RoundRobin {
                     // Push to the ready queue
                     self.ready.push(running_process);
                 }
+                self.increase_timings(usize::from(self.timeslice));
                 SyscallResult::Success
             }
         }
