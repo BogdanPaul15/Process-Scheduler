@@ -334,6 +334,9 @@ impl Scheduler for RoundRobin {
         for i in &self.ready {
             list.push(i)
         }
+        for i in &self.wait {
+            list.push(i)
+        }
         if let Some(x) = &self.running_process {
             list.push(x);
         }
