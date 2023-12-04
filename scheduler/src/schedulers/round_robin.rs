@@ -51,6 +51,9 @@ impl RoundRobin {
         for proc in &mut self.wait {
             proc.timings.0 += amount;
         }
+        for sleep in &mut self.sleep_amounts {
+            *sleep -= amount;
+        }
     }
 }
 
