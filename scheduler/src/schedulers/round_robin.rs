@@ -161,6 +161,7 @@ impl Scheduler for RoundRobin {
                             let mut proc = self.wait.remove(target_wait_index);
                             proc.state = ProcessState::Ready;
                             self.ready.push(proc);
+                            self.increase_timings(min_amount);
                             return crate::SchedulingDecision::Sleep(
                                 NonZeroUsize::new(min_amount).unwrap(),
                             );
