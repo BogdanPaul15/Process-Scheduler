@@ -323,7 +323,7 @@ impl Scheduler for RoundRobin {
                     self.ready.push(running_process);
                 }
                 self.running_process = None;
-                self.remaining_running_time = 0;
+                self.remaining_running_time = self.timeslice.into();
                 SyscallResult::Success
             }
         }
