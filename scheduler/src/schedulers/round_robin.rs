@@ -111,12 +111,12 @@ impl Scheduler for RoundRobin {
             }
             None => {
                 // There is no running process
+                if self.init {
+                    self.init = false;
+                    return crate::SchedulingDecision::Panic;
+                }
                 if !self.ready.is_empty() {
                     // Check if the process with pid 1 has exited
-                    if self.init {
-                        self.init = false;
-                        return crate::SchedulingDecision::Panic;
-                    }
                     // Return the first process from the ready queue
                     let mut proc = self.ready.remove(0);
                     proc.state = ProcessState::Running;
@@ -252,10 +252,12 @@ impl Scheduler for RoundRobin {
                     // increase all timings
                     if let Some(mut running_process) = self.running_process.take() {
                         running_process.state = ProcessState::Waiting { event: (Some(e)) };
-                        running_process.timings.0 += usize::from(self.timeslice) - remaining;
+                        running_process.timings.0 +=
+                            usize::from(self.remaining_running_time) - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += usize::from(self.timeslice) - remaining;
-                        self.increase_timings(usize::from(self.timeslice) - remaining);
+                        running_process.timings.2 +=
+                            usize::from(self.remaining_running_time) - remaining - 1;
+                        self.increase_timings(usize::from(self.remaining_running_time) - remaining);
                         self.wait.push(running_process);
                     }
                     self.running_process = None;
