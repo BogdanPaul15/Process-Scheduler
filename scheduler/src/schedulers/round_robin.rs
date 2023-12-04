@@ -295,7 +295,6 @@ impl Scheduler for RoundRobin {
                     SyscallResult::Success
                 }
                 Syscall::Exit => {
-                    // fa update la timings si syscall
                     if let Some(running_process) = self.running_process.take() {
                         if running_process.pid == 1 {
                             self.init = true;
@@ -303,6 +302,7 @@ impl Scheduler for RoundRobin {
                     }
                     // increase all timings
                     self.increase_timings(self.remaining_running_time - remaining);
+                    self.remaining_running_time = self.timeslice.into();
                     self.running_process = None;
                     SyscallResult::Success
                 }
