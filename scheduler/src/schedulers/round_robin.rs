@@ -20,7 +20,7 @@ pub struct RoundRobin {
     running_process: Option<ProcessInfo>,
     remaining_running_time: usize,
     init: bool,
-    sleep_amounts: Vec<usize>,
+    sleep_amounts: Vec<i32>,
 }
 impl RoundRobin {
     pub fn new(timeslice: NonZeroUsize, minimum_remaining_timeslice: usize) -> Self {
@@ -136,17 +136,17 @@ impl Scheduler for RoundRobin {
                         if is_deadlock {
                             return crate::SchedulingDecision::Deadlock;
                         } else {
-                            let mut min_sleep = std::usize::MAX;
-                            for &amount in &self.sleep_amounts {
-                                if amount < min_sleep {
-                                    min_sleep = amount;
-                                }
-                            }
+                            let min_sleep = if let Some(min) = self.sleep_amounts.iter().min() {
+                                *min
+                            } else {
+                                0 // Dacă vectorul e gol, considerăm o valoare minimă de 0
+                            };
                             for amount in &mut self.sleep_amounts {
                                 *amount -= min_sleep;
                             }
+                            self.increase_timings(min_sleep as usize);
                             return crate::SchedulingDecision::Sleep(
-                                NonZeroUsize::new(min_sleep).unwrap(),
+                                NonZeroUsize::new(min_sleep as usize).unwrap(),
                             );
                         }
                     }
@@ -194,7 +194,7 @@ impl Scheduler for RoundRobin {
                         running_process.timings.2 += usize::from(self.timeslice) - remaining - 1;
                         self.increase_timings(usize::from(self.timeslice) - remaining);
                         self.wait.push(running_process);
-                        self.sleep_amounts.push(amount);
+                        self.sleep_amounts.push(amount as i32);
                     }
                     self.running_process = None;
                     SyscallResult::Success
