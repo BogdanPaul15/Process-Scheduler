@@ -143,6 +143,7 @@ impl Scheduler for RoundRobin {
                                     min_index = index;
                                 }
                             }
+                            self.sleep_amounts.remove(min_index);
                             let mut wait_index = 0;
                             let mut target_wait_index = 0;
 
