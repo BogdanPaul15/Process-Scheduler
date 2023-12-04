@@ -168,9 +168,9 @@ impl Scheduler for RoundRobin {
                         running_process.timings.1 += 1;
                         running_process.timings.2 += usize::from(self.timeslice) - remaining - 1;
                         // Save the remaining time for the running process
-                        self.remaining_running_time = remaining;
                         self.running_process = Some(running_process);
                     }
+                    self.remaining_running_time = remaining;
                     // Return the pid of the just created process
                     SyscallResult::Pid(new_pid)
                 }
