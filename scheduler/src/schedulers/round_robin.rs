@@ -166,7 +166,7 @@ impl Scheduler for RoundRobin {
                         // Update the timings of the running process
                         running_process.timings.0 += usize::from(self.timeslice) - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += usize::from(self.timeslice) - remaining;
+                        // running_process.timings.2 += usize::from(self.timeslice) - remaining;
                         // Save the remaining time for the running process
                         self.remaining_running_time = remaining;
                         self.running_process = Some(running_process);
