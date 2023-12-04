@@ -266,6 +266,7 @@ impl Scheduler for RoundRobin {
                     // Push to the ready queue
                     self.ready.push(running_process);
                 }
+                self.running_process = None;
                 SyscallResult::Success
             }
         }
