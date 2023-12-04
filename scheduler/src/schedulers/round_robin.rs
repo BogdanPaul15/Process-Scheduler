@@ -266,12 +266,22 @@ impl Scheduler for RoundRobin {
                 }
             },
             crate::StopReason::Expired => {
-                self.increase_timings(usize::from(self.remaining_running_time));
+                if self.remaining_running_time == 0 {
+                    self.increase_timings(usize::from(self.timeslice));
+                } else {
+                    self.increase_timings(usize::from(self.remaining_running_time));
+                }
                 if let Some(mut running_process) = self.running_process.take() {
                     // Change its state and update the timings
                     running_process.state = ProcessState::Ready;
-                    running_process.timings.0 += usize::from(self.remaining_running_time);
-                    running_process.timings.2 += usize::from(self.remaining_running_time);
+
+                    if self.remaining_running_time == 0 {
+                        running_process.timings.0 += usize::from(self.timeslice);
+                        running_process.timings.2 += usize::from(self.timeslice);
+                    } else {
+                        running_process.timings.0 += usize::from(self.remaining_running_time);
+                        running_process.timings.2 += usize::from(self.remaining_running_time);
+                    }
                     // Push to the ready queue
                     self.ready.push(running_process);
                 }
