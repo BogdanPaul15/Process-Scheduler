@@ -146,7 +146,7 @@ impl Scheduler for RoundRobin {
                             }
                             self.increase_timings(min_sleep as usize);
                             return crate::SchedulingDecision::Sleep(
-                                NonZeroUsize::new(min_sleep as usize).unwrap(),
+                                NonZeroUsize::new(10).unwrap(),
                             );
                         }
                     }
