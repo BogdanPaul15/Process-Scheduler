@@ -27,7 +27,6 @@ impl RoundRobin {
         Self {
             timeslice,
             minimum_remaining_timeslice,
-            all: Vec::new(),
             ready: Vec::new(),
             wait: Vec::new(),
             pid_counter: 1,
