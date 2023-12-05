@@ -116,6 +116,7 @@ impl Scheduler for RoundRobinPriority {
         self.increase_timings(self.sleep);
         self.sleep = 0;
 
+        self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
         match self.running_process.take() {
             Some(mut running_process) => {
                 // If there is a running process, check if it can be rescheduled
@@ -123,6 +124,8 @@ impl Scheduler for RoundRobinPriority {
                     // Can't reschedule, mark it as ready and push it to the ready queue
                     running_process.state = ProcessState::Ready;
                     self.ready.push(running_process);
+
+                    self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                     // Get the first process from the ready queue and mark it as running
                     if !self.ready.is_empty() {
                         let mut proc = self.ready.remove(0);
@@ -222,6 +225,7 @@ impl Scheduler for RoundRobinPriority {
                             // Save the minimum amount to update all timings in the next next
                             let proc = self.wait.remove(target_wait_index);
                             self.ready.push(proc);
+                            self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                             self.sleep = min_amount;
                             return crate::SchedulingDecision::Sleep(
                                 // Sleep the processor for a minimum amount of time
@@ -237,7 +241,6 @@ impl Scheduler for RoundRobinPriority {
     }
 
     fn stop(&mut self, _reason: crate::StopReason) -> crate::SyscallResult {
-        self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
         match _reason {
             crate::StopReason::Syscall { syscall, remaining } => match syscall {
                 Syscall::Fork(priority) => {
@@ -255,6 +258,7 @@ impl Scheduler for RoundRobinPriority {
                     };
                     // Add it to the ready queue
                     self.ready.push(new_process);
+                    self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                     if let Some(mut running_process) = self.running_process.take() {
                         if running_process.priority > 1 {
                             running_process.priority -= 1;
@@ -330,6 +334,7 @@ impl Scheduler for RoundRobinPriority {
                         let mut new_proc = self.wait.remove(modified_index);
                         new_proc.state = ProcessState::Ready;
                         self.ready.push(new_proc);
+                        self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                     }
                     if let Some(mut running_process) = self.running_process.take() {
                         if running_process.priority > 1 {
@@ -372,6 +377,7 @@ impl Scheduler for RoundRobinPriority {
                     running_process.timings.2 += self.remaining_running_time;
                     // Push to the ready queue
                     self.ready.push(running_process);
+                    self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                 }
                 // Reset the running process
                 self.running_process = None;
