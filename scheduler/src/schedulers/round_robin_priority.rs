@@ -237,6 +237,7 @@ impl Scheduler for RoundRobinPriority {
     }
 
     fn stop(&mut self, _reason: crate::StopReason) -> crate::SyscallResult {
+        self.ready.sort_by_key(|p| p.priority);
         match _reason {
             crate::StopReason::Syscall { syscall, remaining } => match syscall {
                 Syscall::Fork(priority) => {
