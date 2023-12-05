@@ -123,20 +123,15 @@ impl Scheduler for RoundRobin {
                     running_process.state = ProcessState::Ready;
                     self.ready.push(running_process);
                     // Get the first process from the ready queue and mark it as running
-                    if !self.ready.is_empty() {
-                        let mut proc = self.ready.remove(0);
-                        proc.state = ProcessState::Running;
-                        self.running_process = Some(proc);
-                        self.remaining_running_time = self.timeslice.into();
-                        // Return its pid and timeslice
-                        return crate::SchedulingDecision::Run {
-                            pid: self.running_process.as_ref().unwrap().pid(),
-                            timeslice: NonZeroUsize::new(self.remaining_running_time).unwrap(),
-                        };
-                    } else {
-                        // Check for deadlock ??
-                        crate::SchedulingDecision::Deadlock
-                    }
+                    let mut proc = self.ready.remove(0);
+                    proc.state = ProcessState::Running;
+                    self.running_process = Some(proc);
+                    self.remaining_running_time = self.timeslice.into();
+                    // Return its pid and timeslice
+                    return crate::SchedulingDecision::Run {
+                        pid: self.running_process.as_ref().unwrap().pid(),
+                        timeslice: NonZeroUsize::new(self.remaining_running_time).unwrap(),
+                    };
                 } else {
                     // Regain ownership
                     self.running_process = Some(running_process);
