@@ -116,6 +116,7 @@ impl Scheduler for RoundRobinPriority {
         self.increase_timings(self.sleep);
         self.sleep = 0;
 
+        self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
         match self.running_process.take() {
             Some(mut running_process) => {
                 // If there is a running process, check if it can be rescheduled
