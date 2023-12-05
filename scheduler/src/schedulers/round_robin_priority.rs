@@ -255,8 +255,8 @@ impl Scheduler for RoundRobinPriority {
                     // Add it to the ready queue
                     self.ready.push(new_process);
                     if let Some(mut running_process) = self.running_process.take() {
-                        if running_process.priority < running_process.default_priority {
-                            running_process.priority += 1;
+                        if running_process.priority > 1 {
+                            running_process.priority -= 1;
                         }
                         // Update the timings of the running process
                         running_process.timings.0 += self.remaining_running_time - remaining;
@@ -273,8 +273,8 @@ impl Scheduler for RoundRobinPriority {
                     // Increase all timings
                     self.increase_timings(self.remaining_running_time - remaining);
                     if let Some(mut running_process) = self.running_process.take() {
-                        if running_process.priority < running_process.default_priority {
-                            running_process.priority += 1;
+                        if running_process.priority > 1 {
+                            running_process.priority -= 1;
                         }
                         // Update the timings of the running process and push it to the wait queue
                         running_process.state = ProcessState::Waiting { event: None };
@@ -294,8 +294,8 @@ impl Scheduler for RoundRobinPriority {
                     // Increase all timings
                     self.increase_timings(self.remaining_running_time - remaining);
                     if let Some(mut running_process) = self.running_process.take() {
-                        if running_process.priority < running_process.default_priority {
-                            running_process.priority += 1;
+                        if running_process.priority > 1 {
+                            running_process.priority -= 1;
                         }
                         // Update the timings of the running process and push it to the wait queue
                         running_process.state = ProcessState::Waiting { event: (Some(e)) };
@@ -331,8 +331,8 @@ impl Scheduler for RoundRobinPriority {
                         self.ready.push(new_proc);
                     }
                     if let Some(mut running_process) = self.running_process.take() {
-                        if running_process.priority < running_process.default_priority {
-                            running_process.priority += 1;
+                        if running_process.priority > 1 {
+                            running_process.priority -= 1;
                         }
                         // Update the timings of the running process and the remaining time
                         running_process.timings.0 += self.remaining_running_time - remaining;
@@ -362,8 +362,8 @@ impl Scheduler for RoundRobinPriority {
                 // Increase all timings
                 self.increase_timings(self.remaining_running_time);
                 if let Some(mut running_process) = self.running_process.take() {
-                    if running_process.priority > 1 {
-                        running_process.priority -= 1;
+                    if running_process.priority < running_process.default_priority {
+                        running_process.priority += 1;
                     }
                     // Change its state and update the timings
                     running_process.state = ProcessState::Ready;
