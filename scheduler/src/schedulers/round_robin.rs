@@ -160,7 +160,7 @@ impl Scheduler for RoundRobin {
                     };
                 } else {
                     if !self.wait.is_empty() {
-                        // Both ready queue and wait queues are empty, check for panic
+                        // Wait queue is not empty, check for panic
                         if self.init {
                             self.init = false;
                             return crate::SchedulingDecision::Panic;
@@ -243,8 +243,8 @@ impl Scheduler for RoundRobin {
                         // Update the timings of the running process
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += self.remaining_running_time - remaining - 1;
-                        // Save the remaining time for the running process and regain ownership
+                        running_process.timings.2 += self.remaining_running_time - remaining - 1; // - 1 (the syscall)
+                                                                                                  // Save the remaining time for the running process and regain ownership
                         self.remaining_running_time = remaining;
                         self.running_process = Some(running_process);
                     }
