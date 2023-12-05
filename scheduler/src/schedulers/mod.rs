@@ -18,3 +18,6 @@ pub use empty::Empty;
 
 mod round_robin;
 pub use round_robin::RoundRobin;
+
+mod round_robin_priority;
+pub use round_robin_priority::RoundRobinPriority;

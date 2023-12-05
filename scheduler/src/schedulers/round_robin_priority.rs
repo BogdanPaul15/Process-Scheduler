@@ -7,10 +7,11 @@ pub struct ProcessInfo {
     state: ProcessState,
     timings: (usize, usize, usize),
     priority: i8,
+    default_priority: i8,
     _extra: String,
 }
 
-pub struct RoundRobin {
+pub struct RoundRobinPriority {
     timeslice: NonZeroUsize,
     minimum_remaining_timeslice: usize,
     ready: Vec<ProcessInfo>,
@@ -22,7 +23,7 @@ pub struct RoundRobin {
     sleep_amounts: Vec<usize>,
     sleep: usize,
 }
-impl RoundRobin {
+impl RoundRobinPriority {
     pub fn new(timeslice: NonZeroUsize, minimum_remaining_timeslice: usize) -> Self {
         Self {
             timeslice,
@@ -109,7 +110,7 @@ impl Process for ProcessInfo {
     }
 }
 
-impl Scheduler for RoundRobin {
+impl Scheduler for RoundRobinPriority {
     fn next(&mut self) -> crate::SchedulingDecision {
         // Increase all timings after a sleep (if 0, it will increase with 0)
         self.increase_timings(self.sleep);
@@ -248,11 +249,15 @@ impl Scheduler for RoundRobin {
                         state: ProcessState::Ready,
                         timings: (0, 0, 0),
                         priority,
+                        default_priority: priority,
                         _extra: String::new(),
                     };
                     // Add it to the ready queue
                     self.ready.push(new_process);
                     if let Some(mut running_process) = self.running_process.take() {
+                        if running_process.priority < running_process.default_priority {
+                            running_process.priority += 1;
+                        }
                         // Update the timings of the running process
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
@@ -268,6 +273,9 @@ impl Scheduler for RoundRobin {
                     // Increase all timings
                     self.increase_timings(self.remaining_running_time - remaining);
                     if let Some(mut running_process) = self.running_process.take() {
+                        if running_process.priority < running_process.default_priority {
+                            running_process.priority += 1;
+                        }
                         // Update the timings of the running process and push it to the wait queue
                         running_process.state = ProcessState::Waiting { event: None };
                         running_process.timings.0 += self.remaining_running_time - remaining;
@@ -286,6 +294,9 @@ impl Scheduler for RoundRobin {
                     // Increase all timings
                     self.increase_timings(self.remaining_running_time - remaining);
                     if let Some(mut running_process) = self.running_process.take() {
+                        if running_process.priority < running_process.default_priority {
+                            running_process.priority += 1;
+                        }
                         // Update the timings of the running process and push it to the wait queue
                         running_process.state = ProcessState::Waiting { event: (Some(e)) };
                         running_process.timings.0 += self.remaining_running_time - remaining;
@@ -320,6 +331,9 @@ impl Scheduler for RoundRobin {
                         self.ready.push(new_proc);
                     }
                     if let Some(mut running_process) = self.running_process.take() {
+                        if running_process.priority < running_process.default_priority {
+                            running_process.priority += 1;
+                        }
                         // Update the timings of the running process and the remaining time
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
@@ -348,6 +362,9 @@ impl Scheduler for RoundRobin {
                 // Increase all timings
                 self.increase_timings(self.remaining_running_time);
                 if let Some(mut running_process) = self.running_process.take() {
+                    if running_process.priority > 1 {
+                        running_process.priority -= 1;
+                    }
                     // Change its state and update the timings
                     running_process.state = ProcessState::Ready;
                     running_process.timings.0 += self.remaining_running_time;
