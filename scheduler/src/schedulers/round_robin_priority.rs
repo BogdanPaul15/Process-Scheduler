@@ -368,7 +368,7 @@ impl Scheduler for RoundRobinPriority {
                 // Increase all timings
                 self.increase_timings(self.remaining_running_time);
                 if let Some(mut running_process) = self.running_process.take() {
-                    if running_process.priority > 1 {
+                    if running_process.priority > 0 {
                         running_process.priority -= 1;
                     }
                     // Change its state and update the timings
