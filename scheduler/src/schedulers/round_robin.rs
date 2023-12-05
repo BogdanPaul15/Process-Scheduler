@@ -259,7 +259,7 @@ impl Scheduler for RoundRobin {
                         running_process.state = ProcessState::Waiting { event: None };
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += self.remaining_running_time - remaining - 1;
+                        running_process.timings.2 += self.remaining_running_time - remaining - 1; // - 1 (the syscall)
                         self.wait.push(running_process);
                         // Push the sleep amount
                         self.sleep_amounts.push(amount);
@@ -277,7 +277,7 @@ impl Scheduler for RoundRobin {
                         running_process.state = ProcessState::Waiting { event: (Some(e)) };
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += self.remaining_running_time - remaining - 1;
+                        running_process.timings.2 += self.remaining_running_time - remaining - 1; // - 1 (the syscall)
                         self.wait.push(running_process);
                     }
                     // Reset the running process
@@ -310,7 +310,7 @@ impl Scheduler for RoundRobin {
                         // Update the timings of the running process and the remaining time
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += self.remaining_running_time - remaining - 1;
+                        running_process.timings.2 += self.remaining_running_time - remaining - 1; // - 1 (the syscall)
                         self.remaining_running_time = remaining;
                         self.running_process = Some(running_process);
                     }

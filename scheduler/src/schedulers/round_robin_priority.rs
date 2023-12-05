@@ -128,20 +128,15 @@ impl Scheduler for RoundRobinPriority {
                     // Sort processes by priority in reverse order
                     self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                     // Get the first process from the ready queue and mark it as running
-                    if !self.ready.is_empty() {
-                        let mut proc = self.ready.remove(0);
-                        proc.state = ProcessState::Running;
-                        self.running_process = Some(proc);
-                        self.remaining_running_time = self.timeslice.into();
-                        // Return its pid and timeslice
-                        return crate::SchedulingDecision::Run {
-                            pid: self.running_process.as_ref().unwrap().pid(),
-                            timeslice: NonZeroUsize::new(self.remaining_running_time).unwrap(),
-                        };
-                    } else {
-                        // Check for deadlock ??
-                        crate::SchedulingDecision::Deadlock
-                    }
+                    let mut proc = self.ready.remove(0);
+                    proc.state = ProcessState::Running;
+                    self.running_process = Some(proc);
+                    self.remaining_running_time = self.timeslice.into();
+                    // Return its pid and timeslice
+                    return crate::SchedulingDecision::Run {
+                        pid: self.running_process.as_ref().unwrap().pid(),
+                        timeslice: NonZeroUsize::new(self.remaining_running_time).unwrap(),
+                    };
                 } else {
                     // Regain ownership
                     self.running_process = Some(running_process);
@@ -198,14 +193,6 @@ impl Scheduler for RoundRobinPriority {
                                     min_index = index;
                                 }
                             }
-                            // // Update all timings
-                            // for amount in &mut self.sleep_amounts {
-                            //     if *amount < min_amount {
-                            //         *amount = 0;
-                            //     } else {
-                            //         *amount -= min_amount;
-                            //     }
-                            // }
                             // Remove its sleep amount
                             self.sleep_amounts.remove(min_index);
                             let mut wait_index = 0;
@@ -269,8 +256,8 @@ impl Scheduler for RoundRobinPriority {
                         // Update the timings of the running process
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += self.remaining_running_time - remaining - 1;
-                        // Save the remaining time for the running process and regain ownership
+                        running_process.timings.2 += self.remaining_running_time - remaining - 1; // - 1 (the syscall)
+                                                                                                  // Save the remaining time for the running process and regain ownership
                         self.remaining_running_time = remaining;
                         self.running_process = Some(running_process);
                     }
@@ -288,7 +275,7 @@ impl Scheduler for RoundRobinPriority {
                         running_process.state = ProcessState::Waiting { event: None };
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += self.remaining_running_time - remaining - 1;
+                        running_process.timings.2 += self.remaining_running_time - remaining - 1; // - 1 (the syscall)
                         self.wait.push(running_process);
                         // Push the sleep amount
                         self.sleep_amounts.push(amount);
@@ -309,7 +296,7 @@ impl Scheduler for RoundRobinPriority {
                         running_process.state = ProcessState::Waiting { event: (Some(e)) };
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += self.remaining_running_time - remaining - 1;
+                        running_process.timings.2 += self.remaining_running_time - remaining - 1; // - 1 (the syscall)
                         self.wait.push(running_process);
                     }
                     // Reset the running process
@@ -347,7 +334,7 @@ impl Scheduler for RoundRobinPriority {
                         // Update the timings of the running process and the remaining time
                         running_process.timings.0 += self.remaining_running_time - remaining;
                         running_process.timings.1 += 1;
-                        running_process.timings.2 += self.remaining_running_time - remaining - 1;
+                        running_process.timings.2 += self.remaining_running_time - remaining - 1; // - 1 (the syscall)
                         self.remaining_running_time = remaining;
                         self.running_process = Some(running_process);
                     }
