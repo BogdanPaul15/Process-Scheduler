@@ -4,6 +4,11 @@
 
 ## Implementation
 
+I've only used unwrap() in cases that panic is not possible, like:
+- when returning the pid of the currently running process (unwrap() is used because pid contains a NonZeroUsize): the pid can't be 0 because my **pid_counter** is initialized with 1 and increased by 1 everytime. So it can't be 0;
+- when returning the timeslice, **remaining_running_time** can't be 0 because it is initialized with the timeslice and always when it needs to be reset, it receives the value of timeslice; 
+- **min_amount** of sleep can't be 0 because until that point all amounts of zero are removed from the sleep_amounts vec and processes are pushed to the ready queue, so no 0 amount is possible when computing the min_amount of sleep.
+
 #### **Round Robin**
 
 ##### Details
@@ -42,6 +47,7 @@ Almost the same fields as Round Robin, but `ProcessInfo` also receives a **defau
 Same implementation as round robin, only that when the current process receives a syscall, the priority is increased by 1, and when it expires, it is decreased by 1, keeping the imposed limits (the priority cannot be lower than 0 or higher than the default priority).
 
 Then, whenever a process is added to the ready queue, the ready queue is sorted in descending order by priority so that the processes with higher priority are first.
+
 
 ## Getting started
 
