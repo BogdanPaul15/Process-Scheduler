@@ -59,6 +59,35 @@ impl RoundRobin {
                 *sleep -= amount;
             }
         }
+        // Take the awakened processes from the queue and make them ready
+        let mut zero_amount_indices = Vec::new();
+        let mut proc_amount_indices = Vec::new();
+        // Save the indices of the processes that have 0 amount to sleep
+        for (index, &amount) in self.sleep_amounts.iter().enumerate() {
+            if amount == 0 {
+                zero_amount_indices.push(index);
+            }
+        }
+        // Save the indexes of all sleeping processes from wait
+        for (wait_index, proc) in self.wait.iter().enumerate() {
+            if let ProcessState::Waiting { event } = &proc.state {
+                if Option::is_none(event) {
+                    proc_amount_indices.push(wait_index);
+                }
+            }
+        }
+
+        // Remove the sleep(0) processes, and then update the new indexes
+        // (because if you remove an element from a vec, the other indexes will be index - 1)
+        for (iter, i) in zero_amount_indices.iter().enumerate() {
+            let new_index = i - iter;
+            if let Some(index) = proc_amount_indices.get(new_index).cloned() {
+                let mut proc = self.wait.remove(index);
+                self.sleep_amounts.remove(new_index);
+                proc.state = ProcessState::Ready;
+                self.ready.push(proc);
+            }
+        }
     }
 }
 
@@ -207,35 +236,6 @@ impl Scheduler for RoundRobin {
     }
 
     fn stop(&mut self, _reason: crate::StopReason) -> crate::SyscallResult {
-        // Take the awakened processes from the queue and make them ready
-        let mut zero_amount_indices = Vec::new();
-        let mut proc_amount_indices = Vec::new();
-        // Save the indices of the processes that have 0 amount to sleep
-        for (index, &amount) in self.sleep_amounts.iter().enumerate() {
-            if amount == 0 {
-                zero_amount_indices.push(index);
-            }
-        }
-        // Save the indexes of all sleeping processes from wait
-        for (wait_index, proc) in self.wait.iter().enumerate() {
-            if let ProcessState::Waiting { event } = &proc.state {
-                if Option::is_none(event) {
-                    proc_amount_indices.push(wait_index);
-                }
-            }
-        }
-
-        // Remove the sleep(0) processes, and then update the new indexes
-        // (because if you remove an element from a vec, the other indexes will be index - 1)
-        for (iter, i) in zero_amount_indices.iter().enumerate() {
-            let new_index = i - iter;
-            if let Some(index) = proc_amount_indices.get(new_index).cloned() {
-                let mut proc = self.wait.remove(index);
-                self.sleep_amounts.remove(new_index);
-                proc.state = ProcessState::Ready;
-                self.ready.push(proc);
-            }
-        }
         match _reason {
             crate::StopReason::Syscall { syscall, remaining } => match syscall {
                 Syscall::Fork(priority) => {
