@@ -13,14 +13,14 @@ pub struct ProcessInfo {
 pub struct RoundRobin {
     timeslice: NonZeroUsize,
     minimum_remaining_timeslice: usize,
-    ready: Vec<ProcessInfo>,
-    wait: Vec<ProcessInfo>,
-    pid_counter: usize,
-    running_process: Option<ProcessInfo>,
-    remaining_running_time: usize,
-    init: bool,
-    sleep_amounts: Vec<usize>,
-    sleep: usize,
+    ready: Vec<ProcessInfo>,              // ready queue
+    wait: Vec<ProcessInfo>,               // wait queue
+    pid_counter: usize,                   // used to increase pids
+    running_process: Option<ProcessInfo>, // the currently running process
+    remaining_running_time: usize,        // remaining running time
+    init: bool,                           // to check if process with pid 1 exited
+    sleep_amounts: Vec<usize>,            // keep track of sleeps amounts
+    sleep: usize,                         // increase the timings when a process wakes up from sleep
 }
 impl RoundRobin {
     pub fn new(timeslice: NonZeroUsize, minimum_remaining_timeslice: usize) -> Self {
@@ -68,7 +68,7 @@ impl RoundRobin {
                 zero_amount_indices.push(index);
             }
         }
-        // Save the indexes of all sleeping processes from wait
+        // Save the indexes of all sleeping processes from wait queue
         for (wait_index, proc) in self.wait.iter().enumerate() {
             if let ProcessState::Waiting { event } = &proc.state {
                 if Option::is_none(event) {
@@ -78,7 +78,7 @@ impl RoundRobin {
         }
 
         // Remove the sleep(0) processes, and then update the new indexes
-        // (because if you remove an element from a vec, the other indexes will be index - 1)
+        // (if you remove an element from a vec, the other indexes will be swapped with the index of the for loop)
         for (iter, i) in zero_amount_indices.iter().enumerate() {
             let new_index = i - iter;
             if let Some(index) = proc_amount_indices.get(new_index).cloned() {
@@ -188,14 +188,6 @@ impl Scheduler for RoundRobin {
                                     min_index = index;
                                 }
                             }
-                            // // Update all timings
-                            // for amount in &mut self.sleep_amounts {
-                            //     if *amount < min_amount {
-                            //         *amount = 0;
-                            //     } else {
-                            //         *amount -= min_amount;
-                            //     }
-                            // }
                             // Remove its sleep amount
                             self.sleep_amounts.remove(min_index);
                             let mut wait_index = 0;
@@ -362,6 +354,7 @@ impl Scheduler for RoundRobin {
         // List all processes from my Scheduler
         let mut list: Vec<&dyn Process> = Vec::new();
         for i in &self.ready {
+            // Add the processes from the ready queue
             list.push(i)
         }
         for i in &self.wait {

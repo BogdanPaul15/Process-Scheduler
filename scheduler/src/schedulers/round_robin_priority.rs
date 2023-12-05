@@ -79,7 +79,7 @@ impl RoundRobinPriority {
         }
 
         // Remove the sleep(0) processes, and then update the new indexes
-        // (because if you remove an element from a vec, the other indexes will be index - 1)
+        // (if you remove an element from a vec, the other indexes will be swapped with the index of the for loop)
         for (iter, i) in zero_amount_indices.iter().enumerate() {
             let new_index = i - iter;
             if let Some(index) = proc_amount_indices.get(new_index).cloned() {
@@ -116,6 +116,7 @@ impl Scheduler for RoundRobinPriority {
         self.increase_timings(self.sleep);
         self.sleep = 0;
 
+        // Sort processes by priority in reverse order
         self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
         match self.running_process.take() {
             Some(mut running_process) => {
@@ -124,7 +125,7 @@ impl Scheduler for RoundRobinPriority {
                     // Can't reschedule, mark it as ready and push it to the ready queue
                     running_process.state = ProcessState::Ready;
                     self.ready.push(running_process);
-
+                    // Sort processes by priority in reverse order
                     self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                     // Get the first process from the ready queue and mark it as running
                     if !self.ready.is_empty() {
@@ -225,6 +226,7 @@ impl Scheduler for RoundRobinPriority {
                             // Save the minimum amount to update all timings in the next next
                             let proc = self.wait.remove(target_wait_index);
                             self.ready.push(proc);
+                            // Sort processes by priority in reverse order
                             self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                             self.sleep = min_amount;
                             return crate::SchedulingDecision::Sleep(
@@ -258,6 +260,7 @@ impl Scheduler for RoundRobinPriority {
                     };
                     // Add it to the ready queue
                     self.ready.push(new_process);
+                    // Sort processes by priority in reverse order
                     self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                     if let Some(mut running_process) = self.running_process.take() {
                         if running_process.priority < running_process.default_priority {
@@ -334,6 +337,7 @@ impl Scheduler for RoundRobinPriority {
                         let mut new_proc = self.wait.remove(modified_index);
                         new_proc.state = ProcessState::Ready;
                         self.ready.push(new_proc);
+                        // Sort processes by priority in reverse order
                         self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                     }
                     if let Some(mut running_process) = self.running_process.take() {
@@ -377,6 +381,7 @@ impl Scheduler for RoundRobinPriority {
                     running_process.timings.2 += self.remaining_running_time;
                     // Push to the ready queue
                     self.ready.push(running_process);
+                    // Sort processes by priority in reverse order
                     self.ready.sort_by(|a, b| b.priority.cmp(&a.priority));
                 }
                 // Reset the running process
